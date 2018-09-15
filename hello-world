@@ -1,1 +1,4 @@
-Hello world, for a third time.
+Test 1: Creating branch 1.1.0.M3
+Test 2: Testing an updated Bamboo build script.
+Test 3: Testing more Bamboo build script updates.
+Test 4: Deleted the 1.1.0.M3 plan branch from Bamboo, recreated it, and ran it again. Worked a treat! Now testing a commit to existing repo branch + existing plan branch.
