@@ -23,6 +23,8 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import com.antheminc.oss.nimbus.domain.defn.event.EventType;
+
 /**
  * Marker annotation for framework generated events
  * 
@@ -34,8 +36,11 @@ import java.lang.annotation.Target;
 @Target(ANNOTATION_TYPE)
 @Inherited
 public @interface Event {
-
+	
 	int DEFAULT_ORDER_NUMBER = Integer.MAX_VALUE; 
 	
 	int order() default DEFAULT_ORDER_NUMBER;
+	
+	EventType[] eventType() default {};
+	
 }

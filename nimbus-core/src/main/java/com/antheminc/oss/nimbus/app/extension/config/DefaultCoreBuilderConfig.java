@@ -33,11 +33,13 @@ import org.springframework.core.env.PropertyResolver;
 
 import com.antheminc.oss.nimbus.context.BeanResolverStrategy;
 import com.antheminc.oss.nimbus.context.DefaultBeanResolverStrategy;
+import com.antheminc.oss.nimbus.domain.cmd.exec.internal.FunctionExecutor;
 import com.antheminc.oss.nimbus.domain.cmd.exec.internal.process.ParamUpdateEventListener;
 import com.antheminc.oss.nimbus.domain.config.builder.AnnotationAttributeHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.AnnotationConfigHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.DefaultAnnotationConfigHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.DomainConfigBuilder;
+import com.antheminc.oss.nimbus.domain.config.builder.EventAnnotationConfigHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.attributes.ConstraintAnnotationAttributeHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.attributes.DefaultAnnotationAttributeHandler;
 import com.antheminc.oss.nimbus.domain.model.config.builder.EntityConfigBuilder;
@@ -73,6 +75,8 @@ public class DefaultCoreBuilderConfig {
 	
 	private List<String> basePackages;
 	
+	private List<String> basePackagesToExclude;
+	
 	@Value("${platform.config.secure.regex}")
 	private String secureRegex;
 	
@@ -89,7 +93,12 @@ public class DefaultCoreBuilderConfig {
 	
 	@Bean
 	public DomainConfigBuilder domainConfigBuilder(EntityConfigBuilder configBuilder){
-		return new DomainConfigBuilder(configBuilder, basePackages);
+		return new DomainConfigBuilder(configBuilder, basePackages, basePackagesToExclude);
+	}
+	
+	@Bean
+	public FunctionExecutor<?,?> functionExecutor(BeanResolverStrategy beanResolver){
+		return new FunctionExecutor<>(beanResolver);
 	}
 	
 //	@Bean
@@ -127,12 +136,17 @@ public class DefaultCoreBuilderConfig {
 		return new DetourExecutionConfigProvider();
 	}
 	
-	@Bean 
-	public AnnotationConfigHandler annotationConfigHandler(PropertyResolver propertyResolver) {
+	@Bean(name="default.annotationConfigBuilder")
+	public AnnotationConfigHandler annotationConfigHandler(BeanResolverStrategy beanResolver, PropertyResolver propertyResolver) {
 		Map<Class<? extends Annotation>, AnnotationAttributeHandler> attributeHandlers = new HashMap<>();
-		attributeHandlers.put(Constraint.class, new ConstraintAnnotationAttributeHandler());
+		attributeHandlers.put(Constraint.class, new ConstraintAnnotationAttributeHandler(beanResolver));
 		
 		return new DefaultAnnotationConfigHandler(new DefaultAnnotationAttributeHandler(), attributeHandlers, propertyResolver);
+	}
+	
+	@Bean(name="default.eventAnnotationConfigBuilder")
+	public AnnotationConfigHandler eventAnnotationConfigHandler() {
+		return new EventAnnotationConfigHandler();
 	}
 	
 	@Bean

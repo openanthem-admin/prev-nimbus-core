@@ -18,6 +18,7 @@ package com.antheminc.oss.nimbus.domain.model.state;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -26,6 +27,8 @@ import java.util.stream.Stream;
 
 import javax.annotation.concurrent.Immutable;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -154,12 +157,6 @@ public interface EntityState<T> {
 		Map<String, Object> getParamRuntimes();
 		
 		<U> U unwrap(Class<U> c);
-//		default <U> U unwrap(Class<U> c) {
-//			if(c.isInstance(this))
-//				return c.cast(this);
-//			
-//			return null;
-//		}
 	}
 	
 	public interface Model<T> extends EntityState<T> { 
@@ -214,15 +211,9 @@ public interface EntityState<T> {
 //		}
 		
 		T getState();
-//		default T getState() {
-//			return Optional.ofNullable(getAssociatedParam()).map(p->p.getState()).orElse(null);
-//		}
-		
 		void setState(T state);
-//		default void setState(T state) {
-//			Optional.ofNullable(getAssociatedParam()).ifPresent(p->p.setState(state));
-//		}
-		
+
+		boolean isNew();
 	}
 	
 	public interface MappedModel<T, M> extends Model<T>, Mapped<T, M> {
@@ -482,6 +473,8 @@ public interface EntityState<T> {
 //			return false;
 //		}
 		
+		boolean isEmpty();
+		
 		boolean isNested();
 //		default boolean isNested() {
 //			return getType().isNested();
@@ -554,6 +547,79 @@ public interface EntityState<T> {
 		List<ParamValue> getValues();
 		void setValues(List<ParamValue> values);
 		
+		Set<LabelState> getLabels();
+		void setLabels(Set<LabelState> labelState);
+		LabelState getDefaultLabel();
+		LabelState getLabel(String localeLanguageTag);
+		
+		StyleState getStyle();
+		void setStyle(StyleState styleState);
+		
+		@Getter @Setter @ToString 
+		public static class LabelState {
+			private String locale; //default en-US
+			private String text;		
+			private String helpText;
+			private String cssClass;
+			
+			public LabelState() {
+				this.locale = Locale.getDefault().toLanguageTag();
+			}
+			
+			@Override
+			public boolean equals(Object obj) {
+				if(obj==null && this.text==null)
+					return true;
+				
+				if(!LabelState.class.isInstance(obj))
+					return false;
+				
+				LabelState other = LabelState.class.cast(obj);
+				
+				if(StringUtils.equalsIgnoreCase(other.getLocale(), this.getLocale()) 
+						&& StringUtils.equalsIgnoreCase(other.getText(), this.getText()))
+					return true;
+			
+				return false;
+			}
+			
+			@Override
+			public int hashCode() {
+				String concat = this.locale + this.text;
+				return concat.hashCode();
+			}
+		}
+		
+		@Getter @Setter @ToString 
+		public static class StyleState {
+			
+			private String cssClass;
+			
+			@Override
+			public boolean equals(Object obj) {
+				if(obj == null) {
+					return false;
+				}
+				
+				if (!LabelState.class.isInstance(obj)) {
+					return false;
+				}
+				
+				StyleState rhs = StyleState.class.cast(obj);
+				
+				return new EqualsBuilder()
+						.append(this.cssClass, rhs.cssClass)
+						.isEquals();
+			}
+			
+			@Override
+			public int hashCode() {
+				return new HashCodeBuilder()
+						.append(this.cssClass)
+						.toHashCode();
+			}
+		}
+		
 		@Immutable
 		@Getter @Setter @RequiredArgsConstructor @ToString
 		public static class Message {
@@ -565,7 +631,7 @@ public interface EntityState<T> {
 			}
 			public enum Context {			
 				INLINE,
-				GROWL
+				TOAST
 			}
 				
 			@JsonIgnore
@@ -599,7 +665,7 @@ public interface EntityState<T> {
 				return concat.hashCode();
 			}
 		}
-		
+
 		Set<Message> getMessages();
 		void setMessages(Set<Message> msgs);
 		
@@ -706,6 +772,7 @@ public interface EntityState<T> {
 		T getLeafState(int i);
 		
 		boolean add(T elem);
+		boolean addAll(List<T> elems);
 		Param<T> add();
 		boolean add(ListElemParam<T> pColElem);
 		
@@ -741,6 +808,8 @@ public interface EntityState<T> {
 		Page<T> getPage();
 		void setPage(List<T> content, Pageable pageable, Supplier<Long> totalCountSupplier);
 		
+		Map<String, Set<LabelState>> getElemLabels();	
+		void setElemLabels(Map<String, Set<LabelState>> elemLabels);
 	}
 	
 	public interface MappedListParam<T, M> extends ListParam<T>, MappedParam<List<T>, List<M>> {

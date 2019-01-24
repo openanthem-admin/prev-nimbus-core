@@ -17,41 +17,55 @@ import { ConfigService } from '../../../../services/config.service';
 import { LoggerService } from '../../../../services/logger.service';
 import { SessionStoreService, CUSTOM_STORAGE } from '../../../../services/session.store';
 import { AppInitService } from '../../../../services/app.init.service';
+import { InputLegend } from '../../../platform/form/elements/input-legend.component';
+import { configureTestSuite } from 'ng-bullet';
+import { setup, TestContext } from '../../../../setup.spec';
+import { Param } from '../../../../shared/param-state';
+import { fieldValueParam } from 'mockdata';
+
+let param: Param;
+
+const declarations = [
+  RadioButton,
+  TooltipComponent,
+  InputLegend
+];
+const imports = [
+   RadioButtonModule,
+   FormsModule,
+   HttpModule,
+   HttpClientModule,
+   StorageServiceModule
+];
+const providers = [
+   { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
+   { provide: 'JSNLOG', useValue: JL },
+   { provide: LocationStrategy, useClass: HashLocationStrategy },
+   Location,
+   SessionStoreService,
+   PageService,
+   CustomHttpClient,
+   LoaderService,
+   ConfigService,
+   LoggerService,
+   AppInitService
+];
+
+let fixture, hostComponent;
 
 describe('RadioButton', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-          RadioButton,
-          TooltipComponent
-       ],
-       imports: [
-           RadioButtonModule,
-           FormsModule,
-           HttpModule,
-           HttpClientModule,
-           StorageServiceModule
-       ],
-       providers: [
-           { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
-           { provide: 'JSNLOG', useValue: JL },
-           { provide: LocationStrategy, useClass: HashLocationStrategy },
-           Location,
-           SessionStoreService,
-           PageService,
-           CustomHttpClient,
-           LoaderService,
-           ConfigService,
-           LoggerService,
-           AppInitService
-       ]
-    }).compileComponents();
-  }));
+  configureTestSuite(() => {
+    setup( declarations, imports, providers);
+  });
 
-  it('should create the app', async(() => {
-    const fixture = TestBed.createComponent(RadioButton);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
+  beforeEach(() => {
+    fixture = TestBed.createComponent(RadioButton);
+    hostComponent = fixture.debugElement.componentInstance;
+    hostComponent.element = fieldValueParam;
+  });
+
+  it('should create the RadioButton', async(() => {
+    expect(hostComponent).toBeTruthy();
   }));
 
 });

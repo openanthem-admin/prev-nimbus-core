@@ -53,7 +53,7 @@ public class DefaultParamValuesHandler implements ParamValuesOnLoadHandler {
 	}
 
 	@Override
-	public void handle(Values configuredAnnotation, Param<?> param) {
+	public void onStateLoad(Values configuredAnnotation, Param<?> param) {
 		List<ParamValue> result = buildParamValues(configuredAnnotation, param, param);
 		if(result != null)
 			param.setValues(result);
@@ -70,6 +70,7 @@ public class DefaultParamValuesHandler implements ParamValuesOnLoadHandler {
 				return srcValues.getValues(targetParam.getConfig().getCode());
 			} else {
 				String valuesUrl = getPathVariableResolver().resolve(srcParam, values.url());
+				valuesUrl = srcParam.getRootExecution().getRootCommand().getRelativeUri(valuesUrl);
 				Command cmd = CommandBuilder.withUri(valuesUrl).getCommand();
 				cmd.setAction(Action._search);
 				

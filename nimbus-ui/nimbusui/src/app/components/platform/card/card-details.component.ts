@@ -18,7 +18,6 @@
 
 import { WebContentSvc } from './../../../services/content-management.service';
 import { BaseElement } from './../base-element.component';
-import { CardDetails } from '../../../shared/card-details';
 import { Param } from '../../../shared/param-state';
 import { Component, Input } from '@angular/core';
 import { PageService } from '../../../services/page.service';
@@ -59,7 +58,6 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     ]
 })
 export class CardDetailsComponent extends BaseElement {
-    @Input() list: CardDetails;
     @Input() collectionElem: boolean = false;
     @Input() elemId: string = undefined;
     @Input() element: Param;
@@ -86,7 +84,7 @@ export class CardDetailsComponent extends BaseElement {
     ngOnInit() {
         super.ngOnInit();
         this.updatePosition();
-        this.setCardConfig();
+        this.setCardConfig();        
     }
 
     processOnClick() {
@@ -136,5 +134,20 @@ export class CardDetailsComponent extends BaseElement {
         }
     }
 
+    getFieldClass(parent: Param, child: Param) {
+        if (child.config.uiStyles) {
+            if (child.config.uiStyles.attributes && child.config.uiStyles.attributes.cssClass && child.config.uiStyles.attributes.cssClass != '') {
+                return child.config.uiStyles.attributes.cssClass;
+            } else {
+                if (parent.config.uiStyles && parent.config.uiStyles.attributes && parent.config.uiStyles.attributes.cssClass) {
+                    return parent.config.uiStyles.attributes.cssClass;
+                } else {
+                    return '';
+                }
+            }
+        } else {
+            return '';
+        }
+    }
 }
 

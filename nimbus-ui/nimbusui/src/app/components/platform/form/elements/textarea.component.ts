@@ -42,9 +42,9 @@ export const CUSTOM_INPUT_CONTROL_VALUE_ACCESSOR: any = {
   template: `
     <div class='textarea-holder' [hidden]="!element?.visible" *ngIf="element.config?.uiStyles?.attributes?.hidden==false">
     <div class="number" *ngIf="element.config?.uiStyles?.attributes?.controlId!=''">{{element.config?.uiStyles?.attributes?.controlId}}</div>
-    <nm-input-label *ngIf="labelConfig"
+    <nm-input-label *ngIf="!isLabelEmpty"
+      [element]="element" 
       [for]="element.config?.code" 
-      [labelConfig]="labelConfig" 
       [required]="requiredCss">
 
     </nm-input-label>
@@ -56,7 +56,7 @@ export const CUSTOM_INPUT_CONTROL_VALUE_ACCESSOR: any = {
         [id]="element.config?.code" class="form-control textarea-input" 
         *ngIf="element.config?.uiStyles?.attributes?.readOnly==false"></textarea>
     
-    <span class="charCount" *ngIf="getMaxLength()>0">{{getMaxLength()-value.length}} Characters left</span>
+    <span class="charCount" *ngIf="getMaxLength()>0">{{getMaxLength()-(value?value.length: 0)}} Characters left</span>
     <pre class="print-only" *ngIf="element.config?.uiStyles?.attributes?.readOnly==false">{{this.value}}</pre>
     <p style="margin-bottom:0rem;" *ngIf="element.config?.uiStyles?.attributes?.readOnly==true">{{element.leafState}}</p>
     </div>

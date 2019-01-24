@@ -29,18 +29,35 @@ import com.antheminc.oss.nimbus.domain.Event;
  *
  */
 public final class StateEvent {
+	
+	@Retention(RUNTIME)
+	@Target(ANNOTATION_TYPE)
+	@Event(eventType = EventType.OnStateLoad)
+	@Inherited
+	public @interface OnStateLoad {
+		int order() default Event.DEFAULT_ORDER_NUMBER;
+	}
 
 	@Retention(RUNTIME)
 	@Target(ANNOTATION_TYPE)
-	@Event
+	@Event(eventType = EventType.OnStateLoadNew)
 	@Inherited
-	public @interface OnStateLoad {
+	public @interface OnStateLoadNew {	// Blank Constructor  -- Action._new: OnStateLoadNew
 		int order() default Event.DEFAULT_ORDER_NUMBER;
 	}
 	
 	@Retention(RUNTIME)
 	@Target(ANNOTATION_TYPE)
-	@Event
+	@Event(eventType = EventType.OnStateLoadGet)
+	@Inherited
+	public @interface OnStateLoadGet { // Args Constructor  -- Action._get: OnStateLoadGet
+		int order() default Event.DEFAULT_ORDER_NUMBER;
+	}	
+	
+	
+	@Retention(RUNTIME)
+	@Target(ANNOTATION_TYPE)
+	@Event(eventType = EventType.OnStateChange)
 	@Inherited
 	public @interface OnStateChange {
 		int order() default Event.DEFAULT_ORDER_NUMBER;
@@ -48,9 +65,11 @@ public final class StateEvent {
 	
 	@Retention(RUNTIME)
 	@Target(ANNOTATION_TYPE)
-	@Event
+	@Event(eventType = EventType.OnTxnExecute)
 	@Inherited
 	public @interface OnTxnExecute {
 		int order() default Event.DEFAULT_ORDER_NUMBER;
 	}
+
+
 }

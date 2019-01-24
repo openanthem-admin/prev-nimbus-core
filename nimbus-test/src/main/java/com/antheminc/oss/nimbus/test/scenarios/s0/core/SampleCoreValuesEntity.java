@@ -42,12 +42,12 @@ public class SampleCoreValuesEntity {
 	public static class StatusForm {
 		
 		@ValuesConditionals({
-			@ValuesConditional(target = "../statusReason", resetOnChange = false, condition = { 
+			@ValuesConditional(targetPath = "../statusReason", resetOnChange = false, condition = { 
 					@Condition(when = "state=='A'", then = @Values(SR_A.class)),
 					@Condition(when = "state=='B'", then = @Values(SR_B.class)),
 				}
 			),
-			@ValuesConditional(target = "../statusReason2", resetOnChange = true, condition = { 
+			@ValuesConditional(targetPath = "../statusReason2", resetOnChange = true, condition = { 
 					@Condition(when = "state=='A'", then = @Values(SR_A.class)),
 				}
 			)
@@ -55,12 +55,12 @@ public class SampleCoreValuesEntity {
 		@TextBox(postEventOnChange = true)
 		private String status;
 		
-		@ValuesConditional(target = "../statusReason2", resetOnChange = false, condition= {
+		@ValuesConditional(targetPath = "../statusReason2", resetOnChange = false, condition= {
 			@Condition(when = "state=='A'", then = @Values(SR_A.class))
 		})
 		private String status2;
 		
-		@ValuesConditional(target = "../statusReason", condition = { 
+		@ValuesConditional(targetPath = "../statusReason", condition = { 
 				@Condition(when = "state=='A'", then = @Values(SR_A.class)),
 				@Condition(when = "state=='A'", then = @Values(SR_B.class)),
 			},
@@ -69,7 +69,7 @@ public class SampleCoreValuesEntity {
 		@TextBox(postEventOnChange = true)
 		private String allowOverrideStatus;
 		
-		@ValuesConditional(target = "../statusReason", condition = { 
+		@ValuesConditional(targetPath = "../statusReason", condition = { 
 				@Condition(when = "state=='A'", then = @Values(SR_A.class)),
 				@Condition(when = "state=='A'", then = @Values(SR_B.class)),
 			}
@@ -83,6 +83,14 @@ public class SampleCoreValuesEntity {
 		
 		@Radio
 		private String statusReason2;
+		
+		@ValuesConditional(targetPath = "/../contactStatus", resetOnChange = false, condition = {
+			@ValuesConditional.Condition(when = "state == 'changeit'", then = @Values(StatusPast.class))
+		})
+		private String contactType;
+		
+		@Values(StatusAll.class)
+		private Status contactStatus;
 	}
 	
 	public static class SR_DEFAULT implements Source {
@@ -107,6 +115,32 @@ public class SampleCoreValuesEntity {
 		public List<ParamValue> getValues(String paramCode) {
 			final List<ParamValue> values = new ArrayList<>();
 			values.add(new ParamValue("B1", "B1"));
+			return values;
+		}
+	}
+	@Getter
+	public static enum Status {
+		CURRENT("Current"),
+		PAST("Past");
+		private String name;
+		private Status(String name){
+			this.name = name;
+		}
+	}
+	public static class StatusAll implements Source {
+		@Override
+		public List<ParamValue> getValues(String paramCode) {
+			final List<ParamValue> values = new ArrayList<>();
+			values.add(new ParamValue("PAST", "Past"));
+			values.add(new ParamValue("CURRENT", "Current"));
+			return values;
+		}
+	}
+	public static class StatusPast implements Source {
+		@Override
+		public List<ParamValue> getValues(String paramCode) {
+			final List<ParamValue> values = new ArrayList<>();
+			values.add(new ParamValue("PAST", "Past"));
 			return values;
 		}
 	}

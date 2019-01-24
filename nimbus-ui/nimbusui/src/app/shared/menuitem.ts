@@ -30,8 +30,10 @@
  * 
  */
 export interface MenuItem {
+    code?: string;
     label?: string;
     icon?: string;
+    imgType?: string;
     command?: (event?: any) => void;
     url?: string;
     path?: string;
@@ -54,4 +56,6 @@ export interface MenuItem {
     title?: string;
     id?: string;
     automationId?: any;
+    type?: string;
+    rel?: string;
 }

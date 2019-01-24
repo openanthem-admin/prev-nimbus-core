@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
+
 import { LabelConfig, Constraint } from './../../../../shared/param-config';
 import { BaseControlValueAccessor } from './control-value-accessor.component';
 import { Input, ChangeDetectorRef } from '@angular/core';
@@ -23,9 +25,10 @@ import { Param } from '../../../../shared/param-state';
 import { WebContentSvc } from '../../../../services/content-management.service';
 import { ValidationUtils } from '../../validators/ValidationUtils';
 import { ValidationConstraint } from './../../../../shared/validationconstraints.enum';
-import { FormControl, AbstractControl } from '@angular/forms/src/model';
 import { Subscription } from 'rxjs';
 import { ControlSubscribers } from './../../../../services/control-subscribers.service';
+import { ParamUtils } from './../../../../shared/param-utils';
+
 /**
  * \@author Dinakar.Meda
  * \@author Sandeep.Mantha
@@ -54,9 +57,12 @@ export abstract class BaseControl<T> extends BaseControlValueAccessor<T> {
         super();
     }
 
-    setState(event:any,frmInp:any) {
-        frmInp.element.leafState = event;
+    setState(val:any,frmInp:any) {
+        frmInp.element.leafState = val;
         this.cd.markForCheck();
+        if(val == null) {  //if the val is null - the form is set for the first time or it is being reset or user clearing the value (date component)
+            this.controlService.resetPreviousLeafState(val);
+        }
     }
 
     emitValueChangedEvent(formControl:any,$event:any) {
@@ -73,7 +79,7 @@ export abstract class BaseControl<T> extends BaseControlValueAccessor<T> {
         
         this.value = this.element.leafState;
         this.disabled = !this.element.enabled;
-        this.labelConfig = this.wcs.findLabelContent(this.element);
+        this.loadLabelConfig(this.element);
         this.requiredCss = ValidationUtils.applyelementStyle(this.element);
         if (this.form) {
             let frmCtrl = this.form.controls[this.element.config.code];
@@ -82,6 +88,14 @@ export abstract class BaseControl<T> extends BaseControlValueAccessor<T> {
                 this.requiredCss = ValidationUtils.rebindValidations(frmCtrl,this.element.activeValidationGroups,this.element);
             } 
         }
+    }
+
+    /**	
+     * Retrieve the label config from the provided param and set it into this instance's labelConfig.
+     * @param param The param for which to load label content for.	
+     */	
+    protected loadLabelConfig(param: Param): void {	
+        this.labelConfig = this.wcs.findLabelContent(param);	
     }
 
     ngAfterViewInit(){
@@ -131,20 +145,24 @@ export abstract class BaseControl<T> extends BaseControlValueAccessor<T> {
      * Get the tooltip help text for this element.
      */
     public get helpText(): string {
-        if (!this.labelConfig) {
-            return undefined;
-        }
-        return this.labelConfig.helpText;
+        return ParamUtils.getHelpText(this.labelConfig);
     }
 
     /**
      * Get the label text for this element.
      */
     public get label(): string {
-        if (!this.labelConfig) {
-            return undefined;
+        return ParamUtils.getLabelText(this.labelConfig);
+    }
+
+    /**
+     * Determine if the label for this element is empty or not.
+     */
+    public get isLabelEmpty(): boolean {
+        if (this.label) {
+            return this.label.trim().length === 0;
         }
-        return this.labelConfig.text;
+        return true;
     }
     
     /**
