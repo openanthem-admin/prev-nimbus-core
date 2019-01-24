@@ -15,7 +15,7 @@
  */
 package com.antheminc.oss.nimbus.domain.cmd.exec.internal.search;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.antheminc.oss.nimbus.domain.cmd.Command;
 import com.antheminc.oss.nimbus.domain.cmd.exec.ExecutionContext;
@@ -50,7 +50,7 @@ public class DefaultSearchFunctionHandlerQuery<T, R> extends DefaultSearchFuncti
 		querySearchCriteria.setFetch(cmd.getFirstParameterValue(Constants.SEARCH_REQ_FETCH_MARKER.code));
 		querySearchCriteria.setAggregateCriteria(cmd.getFirstParameterValue(Constants.SEARCH_REQ_AGGREGATE_MARKER.code));
 		
-		querySearchCriteria.setProjectCriteria(buildProjectCritera(cmd));
+		querySearchCriteria.setProjectCriteria(buildProjectCriteria(cmd));
 		querySearchCriteria.setPageRequest(buildPageCriteria(cmd));
 		
 		querySearchCriteria.setCmd(executionContext.getCommandMessage().getCommand());

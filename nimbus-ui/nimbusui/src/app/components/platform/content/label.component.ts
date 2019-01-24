@@ -1,3 +1,4 @@
+import { WebContentSvc } from './../../../services/content-management.service';
 /**
  * @license
  * Copyright 2016-2018 the original author or authors.
@@ -16,7 +17,8 @@
  */
 'use strict';
 import { Component, Input } from '@angular/core';
-import { LabelConfig } from './../../../shared/param-config';
+import { PageService } from './../../../services/page.service';
+import { BaseLabel } from '../base-label.component';
 
 /**
  * \@author Purnachander.Mashetty
@@ -34,48 +36,31 @@ import { LabelConfig } from './../../../shared/param-config';
         <H5 *ngIf="size=='H5'" [className]="cssClass">{{label}}</H5>
         <H6 *ngIf="size=='H6'" [className]="cssClass">{{label}}</H6>
         <nm-tooltip *ngIf="helpText" [helpText]='helpText'></nm-tooltip>
-    `
+    `,
+    providers: [
+        WebContentSvc
+    ],
 })
 
-export class Label {
+export class Label extends BaseLabel {
 
-    @Input() labelConfig: LabelConfig;
     @Input() size: String;
     @Input() labelClass: String;
 
-    constructor() {
-    }
-
-     /**
-     * Get the tooltip help text for this element.
-     */
-    public get helpText(): string {
-        if (!this.labelConfig) {
-            return undefined;
-        }
-        return this.labelConfig.helpText;
-    }
-
-    /**
-     * Get the label text for this element.
-     */
-    public get label(): string {
-        if (!this.labelConfig) {
-            return undefined;
-        }
-        return this.labelConfig.text;
+    constructor(wcs: WebContentSvc, pageService: PageService) {
+        super(wcs, pageService);
     }
 
     /**
      * Get the css classes to apply for this element.
      */
     public get cssClass(): string {
-        let cssClass = '';
+        let cssClass = super.getCssClass();
         if (this.labelClass) {
+            if (cssClass.trim().length !== 0) {
+                cssClass += ' ';
+            }
             cssClass += this.labelClass;
-        }
-        if (this.labelConfig && this.labelConfig.cssClass) {
-            cssClass += ' ' + this.labelConfig.cssClass;
         }
         return cssClass;
     }

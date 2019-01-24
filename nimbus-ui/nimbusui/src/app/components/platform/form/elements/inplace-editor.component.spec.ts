@@ -1,3 +1,4 @@
+import { Param } from './../../../../shared/param-state';
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -7,6 +8,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { CustomHttpClient } from '../../../../services/httpclient.service';
 import { JL } from 'jsnlog';
 import { StorageServiceModule, SESSION_STORAGE } from 'angular-webstorage-service';
+import { Subject } from 'rxjs';
 
 import { InPlaceEditorComponent } from './inplace-editor.component';
 import { PageService } from './../../../../services/page.service';
@@ -20,9 +22,13 @@ import { ConfigService } from '../../../../services/config.service';
 import { LoggerService } from '../../../../services/logger.service';
 import { SessionStoreService, CUSTOM_STORAGE } from '../../../../services/session.store';
 import { AppInitService } from '../../../../services/app.init.service';
-import { Subject } from 'rxjs';
+import { InputLabel } from './input-label.component';
+import { configureTestSuite } from 'ng-bullet';
+import { setup, TestContext } from '../../../../setup.spec';
+import { Values } from '../../../../shared/param-state';
+import { fieldValueParam } from 'mockdata';
 
-let fixture, app, pageService;
+let pageService;
 
 class MockLoggerService {
     error(a) { }
@@ -42,146 +48,158 @@ class MockPageService {
     postOnChange(a, b, c) {    }
 }
 
+const declarations = [
+  InPlaceEditorComponent,
+  InputText,
+  TextArea,
+  ComboBox,
+  TooltipComponent,
+  SelectItemPipe,
+  InputLabel
+];
+const imports = [
+   FormsModule,
+   ReactiveFormsModule,
+   DropdownModule,
+   HttpModule,
+   HttpClientTestingModule,
+   StorageServiceModule
+];
+const providers = [
+   { provide: 'JSNLOG', useValue: JL },
+   { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
+   { provide: LoggerService, useClass: MockLoggerService },
+   { provide: PageService, useClass: MockPageService },
+   CustomHttpClient,
+   LoaderService,
+   ConfigService,
+   SessionStoreService,
+   AppInitService
+];
+let fixture, hostComponent;
 describe('InPlaceEditorComponent', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-          InPlaceEditorComponent,
-          InputText,
-          TextArea,
-          ComboBox,
-          TooltipComponent,
-          SelectItemPipe
-       ],
-       imports: [
-           FormsModule,
-           ReactiveFormsModule,
-           DropdownModule,
-           HttpModule,
-           HttpClientTestingModule,
-           StorageServiceModule
-       ],
-       providers: [
-           { provide: 'JSNLOG', useValue: JL },
-           { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
-           { provide: LoggerService, useClass: MockLoggerService },
-           { provide: PageService, useClass: MockPageService },
-           CustomHttpClient,
-           LoaderService,
-           ConfigService,
-           SessionStoreService,
-           AppInitService
-       ]
-    }).compileComponents();
+
+  configureTestSuite(() => {
+    setup( declarations, imports, providers);
+  });
+
+  beforeEach(() => {
     fixture = TestBed.createComponent(InPlaceEditorComponent);
-    app = fixture.debugElement.componentInstance;
+    hostComponent = fixture.debugElement.componentInstance;
+    hostComponent.element = fieldValueParam;
     pageService = TestBed.get(PageService);
+  });
+
+  it('should create the InPlaceEditorComponent', async(() => {
+    expect(hostComponent).toBeTruthy();
   }));
 
-    it('should create the app', async(() => {
-      expect(app).toBeTruthy();
-    }));
-
-    it('set value() should update the displayValue', async(() => {
-      app.element = { values: [{ code: 'test', label: 'l' }] };
-      app.value = 'test';
-      app.value = '';
-      expect(app.displayValue).toEqual('Unassigned');
-    }));
+  it('set value() should update the displayValue', async(() => {
+    hostComponent.value = 'firstName';
+    hostComponent.value = '';
+    expect(hostComponent.displayValue).toEqual('Unassigned');
+  }));
 
     it('setDisplayValue() should update the displayValue from element.values[]', async(() => {
-      app.element = { values: [{ code: 'test', label: 'l' }] };
-      app.setDisplayValue('test');
-      expect(app.displayValue).toEqual('l');
+      const value = { code: 'test', label: 'l' } as Values;
+      hostComponent.element.values = [value];
+      hostComponent.setDisplayValue('test');
+      expect(hostComponent.displayValue).toEqual('l');
     }));
 
     it('setDisplayValue() should update the displayValue property as Unassigned', async(() => {
-      app.element = { values: [{ code: 'test', label: 'l' }] };
-      app.setDisplayValue(null);
-      expect(app.displayValue).toEqual('Unassigned');
+      const value = { code: 'test', label: 'l' } as Values;
+      hostComponent.element.values = [value];
+      hostComponent.setDisplayValue(null);
+      expect(hostComponent.displayValue).toEqual('Unassigned');
     }));
 
     it('setDisplayValue() should update the displayValue as element.leafState', async(() => {
-      app.element = { leafState: 'ls', values: [{ code: 'test', label: null }] };
-      app.setDisplayValue('test');
-      expect(app.displayValue).toEqual('ls');
+      const value = { code: 'test', label: null } as Values;
+      hostComponent.element.values = [value];
+      hostComponent.element.leafState = 'ls';
+      hostComponent.setDisplayValue('test');
+      expect(hostComponent.displayValue).toEqual('ls');
     }));
 
-    it('ngOnInit() should call the setDisplayValue() 3 times', async(() => {
-      app.setDisplayValue = () => {};
-      app.generateComponent = () => {};
-      app.element = { leafState: 'l', config: { uiStyles: { attributes: { inplaceEditType: '' } }, code: 123 } };
-      const eve = { leafState: '', config: { code: 123 } };
-      spyOn(app, 'setDisplayValue').and.callThrough();
-      app.ngOnInit();
-      pageService.logError(eve);
-      expect(app.setDisplayValue).toHaveBeenCalledTimes(3);
-    }));
-
-    //   it('9should create the app', async(() => {
-    //       const res = app.createInputInstance('Textarea');
-    //       console.log('res///79', res);
-    //     // expect(app).toBeTruthy();
-    //   }));
-
+    // it('ngOnInit() should call the setDisplayValue() 3 times', () => {
+    //   fixture.whenStable().then(() => {
+    //     hostComponent.setDisplayValue = () => {};
+    //     (hostComponent as any).generateComponent = () => {};
+    //     hostComponent.element.leafState = 'l';
+    //     hostComponent.element.config.uiStyles.attributes.inplaceEditType = '';
+    //     hostComponent.element.config.code = '123';
+    //     const eve = { leafState: '', config: { code: '123' } };
+    //     spyOn(hostComponent, 'setDisplayValue').and.callThrough();
+    //     hostComponent.ngOnInit();
+    //     pageService.logError(eve);
+    //     expect(hostComponent.setDisplayValue).toHaveBeenCalledTimes(3);
+    //   });
+    // });
+    
     it('generateComponent() should update the inputInstance.element and setInPlaceEditContext', async(() => {
-      app.element = 'test';
       const inputInstance = { element: '', setInPlaceEditContext: a => {} };
-      spyOn(app, 'getComponentType').and.returnValue('');
-      spyOn(app, 'createInputInstance').and.returnValue(inputInstance);
+      spyOn((hostComponent as any), 'getComponentType').and.returnValue('');
+      spyOn((hostComponent as any), 'createInputInstance').and.returnValue(inputInstance);
       spyOn(inputInstance, 'setInPlaceEditContext').and.callThrough();
-      app.generateComponent('');
-      expect(inputInstance.element).toEqual('test');
+      (hostComponent as any).generateComponent('');
+      const res: any = hostComponent.element;
+      expect(inputInstance.element).toEqual(res);
       expect(inputInstance.setInPlaceEditContext).toHaveBeenCalled();
     }));
 
     it('getComponentType() should throw an error', async(() => {
-      app.components = { a: 'test' };
+      (hostComponent as any).components = { a: 'test' };
       expect(() => {
-        app.getComponentType('b');
+        (hostComponent as any).getComponentType('b');
       }).toThrow();
     }));
 
     it('getComponentType() should return component name', async(() => {
-      app.components = { a: 'test' };
-      expect(app.getComponentType('a')).toEqual('test');
+      (hostComponent as any).components = { a: 'test' };
+      expect((hostComponent as any).getComponentType('a')).toEqual('test');
     }));
 
-    it('get type() should update from element.config.uiStyles.attributes.inplaceEditType', async(() => {
-      app.element = { values: [], config: { uiStyles: { attributes: { inplaceEditType: 'test' } } } };
-      expect(app.type).toEqual('test');
-    }));
+    it('get type() should update from element.config.uiStyles.attributes.inplaceEditType', () => {
+      fixture.whenStable().then(() => {
+        hostComponent.element.config.uiStyles.attributes.inplaceEditType = 'test';
+        expect(hostComponent.type).toEqual('test');
+      });
+    });
 
     it('cancel() should update the value and editClass', async(() => {
-      app.element = { values: [] };
-      app.preValue = 'test';
-      app.cancel();
-      expect(app.value).toEqual('test');
-      expect(app.editClass).toEqual('');
+      hostComponent.element.values = [];
+      (hostComponent as any).preValue = 'test';
+      hostComponent.cancel();
+      expect(hostComponent.value).toEqual('test');
+      expect(hostComponent.editClass).toEqual('');
     }));
 
-    it('onSubmit() should update the editClass and call pageService.postOnChange()', async(() => {
-      app.element = { leafState: '', values: [], path: '' };
+    it('onSubmit() should update the editClass and call pageService.postOnChange()', () => {
+      hostComponent.element.leafState = '';
+      hostComponent.element.values = [];
+      hostComponent.element.path = '';
       spyOn(pageService, 'postOnChange').and.callThrough();
-      app.onSubmit();
-      expect(app.editClass).toEqual('');
+      hostComponent.onSubmit();
+      expect(hostComponent.editClass).toEqual('');
       expect(pageService.postOnChange).toHaveBeenCalled();
-    }));
+    });
 
     it('enableEdit() should update the preValue and editClass', async(() => {
-      app.element = { leafState: '', values: [] };
-      app.value = 'test';
-      app.enableEdit();
-      expect(app.preValue).toEqual('test');
-      expect(app.editClass).toEqual('editOn');
+      hostComponent.element.leafState = '';
+      hostComponent.element.values = [];
+      hostComponent.value = 'test';
+      hostComponent.enableEdit();
+      expect((hostComponent as any).preValue).toEqual('test');
+      expect(hostComponent.editClass).toEqual('editOn');
     }));
 
     it('ngOnChanges() should call the setDisplayValue()', async(() => {
-      app.element = { leafState: '', values: [] };
-      const changes = { element: true };
-      spyOn(app, 'setDisplayValue').and.returnValue('');
-      app.ngOnChanges(changes);
-      expect(app.setDisplayValue).toHaveBeenCalled();
+      hostComponent.element.leafState = '';
+      hostComponent.element.values = [];
+      const changes: any = { element: true };
+      spyOn(hostComponent, 'setDisplayValue').and.returnValue('');
+      hostComponent.ngOnChanges(changes);
+      expect(hostComponent.setDisplayValue).toHaveBeenCalled();
     }));
-
 });

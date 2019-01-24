@@ -25,12 +25,11 @@ import com.antheminc.oss.nimbus.domain.cmd.Action;
 import com.antheminc.oss.nimbus.domain.cmd.Command;
 import com.antheminc.oss.nimbus.domain.cmd.CommandBuilder;
 import com.antheminc.oss.nimbus.domain.cmd.CommandElement.Type;
-import com.antheminc.oss.nimbus.domain.cmd.exec.AbstractFunctionCommandExecutor;
+import com.antheminc.oss.nimbus.domain.cmd.exec.AbstractCommandExecutor;
 import com.antheminc.oss.nimbus.domain.cmd.exec.CommandExecution.Input;
 import com.antheminc.oss.nimbus.domain.cmd.exec.CommandExecution.Output;
 import com.antheminc.oss.nimbus.domain.cmd.exec.CommandExecutorGateway;
 import com.antheminc.oss.nimbus.domain.cmd.exec.ExecutionContext;
-import com.antheminc.oss.nimbus.domain.cmd.exec.FunctionHandler;
 import com.antheminc.oss.nimbus.domain.config.builder.DomainConfigBuilder;
 import com.antheminc.oss.nimbus.domain.defn.Repo;
 import com.antheminc.oss.nimbus.domain.model.config.ModelConfig;
@@ -50,7 +49,7 @@ import lombok.Getter;
  */
 @EnableLoggingInterceptor
 @Getter(value=AccessLevel.PROTECTED)
-public class DefaultActionExecutorGet extends AbstractFunctionCommandExecutor<Param<Object>, Object> {
+public class DefaultActionExecutorGet extends AbstractCommandExecutor<Object> {
 
 	private CommandExecutorGateway commandGateway;
 	
@@ -64,22 +63,11 @@ public class DefaultActionExecutorGet extends AbstractFunctionCommandExecutor<Pa
 	}
 	
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected final Output<Object> executeInternal(Input input) {
 		ExecutionContext eCtx = handleGetDomainRoot(input.getContext());
-	
 		Param<?> p = findParamByCommandOrThrowEx(eCtx);
-		
-		final Object outcome;
-		if(containsFunctionHandler(input)) {
-			outcome = executeFunctionHanlder(input, FunctionHandler.class);
-			
-		} else {
-			outcome = p;
-		}
-		
-		return Output.instantiate(input, eCtx, outcome);
+		return Output.instantiate(input, eCtx, p);
 	}
 	
 	protected ExecutionContext handleGetDomainRoot(ExecutionContext eCtx) {
@@ -107,9 +95,14 @@ public class DefaultActionExecutorGet extends AbstractFunctionCommandExecutor<Pa
 		final String resolvedRepAlias = resolveEntityAliasByRepo(rootDomainConfig);
 		
 		// db - entity
-		if(Repo.Database.exists(repo) && refId != null) { // root (view or core) is persistent
-			entity = getRepositoryFactory().get(rootDomainConfig.getRepo())
+		if(Repo.Database.exists(repo) ) {
+			if (refId != null) { // root (view or core) is persistent
+				entity = getRepositoryFactory().get(rootDomainConfig.getRepo())
 						._get(refId, rootDomainConfig.getReferredClass(), resolvedRepAlias, eCtx.getCommandMessage().getCommand().getAbsoluteUri());
+			} else {
+				/* Cannot make a get call without a entity reference Id */
+				throw new InvalidConfigException("Get call received for domain - " + rootDomainConfig.getAlias() + " without a refId. Execution Context: " + eCtx);
+			}
 			
 		} else {
 			entity = instantiateEntity(eCtx, rootDomainConfig);
@@ -130,7 +123,9 @@ public class DefaultActionExecutorGet extends AbstractFunctionCommandExecutor<Pa
 	private QuadModel<?, ?> executeCb(ExecutionContext eCtx, ExecutionEntity<?, ?> e) {
 		try {
 			TH_ACTION.set(Action._get);
-			return getQuadModelBuilder().build(eCtx.getCommandMessage().getCommand(), e);
+			QuadModel<?, ?> q = getQuadModelBuilder().build(eCtx.getCommandMessage().getCommand(), e);
+			q.getRoot().initState();
+			return q;
 		} finally {
 			TH_ACTION.set(null);
 		}
@@ -145,9 +140,11 @@ public class DefaultActionExecutorGet extends AbstractFunctionCommandExecutor<Pa
 		
 		Param<?> coreParam = Optional.ofNullable(getCommandGateway().execute(mapsToCmd, null))
 								.map(mOut->(Param<?>)mOut.getSingleResult())
-								.orElseThrow(()->new InvalidStateException("Expeceted first response from command gateway to return mapsTo core parm, but not found for mapsToCmd: "+mapsToCmd));
+								.orElseThrow(()->new InvalidStateException("Expected first response from command gateway to return mapsTo core parm, but not found for mapsToCmd: "+mapsToCmd));
 		
-		return getQuadModelBuilder().build(eCtx.getCommandMessage().getCommand(), mapped, coreParam);
+		QuadModel<?, ?> q = getQuadModelBuilder().build(eCtx.getCommandMessage().getCommand(), mapped, coreParam);
+		q.getRoot().initState();
+		return q;
 	}
 	
 	protected ProcessFlow loadProcessState(ModelConfig<?> rootDomainConfig, ExecutionContext eCtx) {

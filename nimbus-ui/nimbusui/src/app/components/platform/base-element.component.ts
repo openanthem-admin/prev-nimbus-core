@@ -54,6 +54,7 @@ export class BaseElement {
     public labelConfig: LabelConfig;
     protected _nestedParams: Param[];
     protected _imgSrc: string;
+    protected _cols: string;
     protected _code: string;
     protected _visible: any;
     protected _enabled: any;
@@ -76,16 +77,23 @@ export class BaseElement {
         this.requiredCss = ValidationUtils.applyelementStyle(this.element);
     }
 
-    /**
-     * Traverses the provided param and stores the label config into this class' appropriate values.
-     * @param param The param for which to load label content for.
-     */
-    protected loadLabelConfig(param: Param): void {
-        this.labelConfig = this.wcs.findLabelContent(param);
+    /**	
+     * Retrieve the label config from the provided param for the active Locale 
+     * and set it into this instance's labelConfig.
+     * @param param The param for which to load label content for.	
+     */	
+    protected loadLabelConfig(param: Param): void {	
+        this.labelConfig = this.wcs.findLabelContent(param);	
     }
 
-    protected loadLabelConfigByCode(code: string, labelConfigs: LabelConfig[]): void {
-        this.labelConfig = this.wcs.findLabelContentFromConfig(code, labelConfigs);
+    /**	
+     * Retrieve the label config from the provided labelConfigs that has the same provided code 
+     * and set it into this instance's labelConfig. If no label config is found, defaultLabel can
+     * be used to set a default label if the WebContentService allows for it.
+     * @param param The param for which to load label content for.	
+     */	
+    protected loadLabelConfigFromConfigs(labelConfigs: LabelConfig[], defaultLabel?: string): void {	
+        this.labelConfig = this.wcs.findLabelContentFromConfig(labelConfigs, defaultLabel);	
     }
 
     /**
@@ -105,6 +113,13 @@ export class BaseElement {
         return this.element.config.uiStyles.attributes.imgSrc;
     }
     
+    /**
+     * The cols attribute for this param
+     */
+    public get cols(): string {
+        return this.element.config.uiStyles.attributes.cols;
+    }
+
     /**
      * Unique code for this Param
      */
@@ -158,20 +173,24 @@ export class BaseElement {
      * Get the tooltip help text for this element.
      */
     public get helpText(): string {
-        if (!this.labelConfig) {
-            return undefined;
-        }
-        return this.labelConfig.helpText;
+        return ParamUtils.getHelpText(this.labelConfig);
     }
 
     /**
      * Get the label text for this element.
      */
     public get label(): string {
-        if (!this.labelConfig) {
-            return undefined;
+        return ParamUtils.getLabelText(this.labelConfig);
+    }
+
+    /**
+     * Determine if the label for this element is empty or not.
+     */
+    public get isLabelEmpty(): boolean {
+        if (this.label) {
+            return this.label.trim().length === 0;
         }
-        return this.labelConfig.text;
+        return true;
     }
 
     /**
@@ -201,7 +220,7 @@ export class BaseElement {
     }
 
     updatePosition() {
-        if (this.labelConfig && this.labelConfig.text) {
+        if (!this.isLabelEmpty) {
             this.labelSize = this.getHeaderSize(this.position);
         } else {
             this.position--;
@@ -217,6 +236,11 @@ export class BaseElement {
             return 'H6';
         }
         return 'H' + position;
+    }
+
+    ngOnDestroy(){
+        if(this.element.message)                 
+        this.element.message = [];              
     }
     
 }

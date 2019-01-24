@@ -18,41 +18,58 @@
 
 import { Component, Input } from '@angular/core';
 import { WebContentSvc } from '../../services/content-management.service';
+import { Param } from './../../shared/param-state';
+import { LabelConfig } from './../../shared/param-config';
+import { PageService } from './../../services/page.service';
+import { ParamUtils } from './../../shared/param-utils';
 
 /**
- * \@author Purnachander.Mashetty
+ * \@author Tony Lopez
  * \@whatItDoes 
  * 
  * \@howToUse 
  * 
  */
-@Component({
-    selector: 'nm-base-label',
-    template:`
-    `
-})
+export abstract class BaseLabel {
 
-export class BaseLabel {
+    @Input() element: Param;
+    protected labelConfig: LabelConfig;
 
-    @Input() position: number;
-    labelSize: String;
-    label: String;
-    
+    constructor(private _wcs: WebContentSvc, private _pageService: PageService) {
 
-    constructor(private wcs: WebContentSvc) {
+    }
+    /**	
+     * Retrieve the label config from the provided param and set it into this instance's labelConfig.
+     * @param param The param for which to load label content for.	
+     */	
+    protected loadLabelConfig(param: Param): void {	
+        this.labelConfig = this._wcs.findLabelContent(param);	
     }
 
-    ngOnInit() {
-        this.labelSize = this.getHeaderSize(this.position);
-        this.getHeaderSize(this.position);
+    /**
+     * Get the tooltip help text for this element.
+     */
+    public get helpText(): string {
+        return ParamUtils.getHelpText(this.labelConfig);
     }
 
-    getHeaderSize(position) {
-        if (position > 6) {
-            return 'H6';
+    /**
+     * Get the label text for this element.
+     */
+    public get label(): string {
+        this.loadLabelConfig(this.element);
+        return ParamUtils.getLabelText(this.labelConfig);
+    }
+
+    /**
+     * Get the css classes to apply for this element.
+     */
+    public getCssClass(): string {
+        let cssClass = '';
+        if (this.labelConfig && this.labelConfig.cssClass) {
+            cssClass = this.labelConfig.cssClass;
         }
-        return 'H' + position;
+        return cssClass;
     }
-    
 }
 

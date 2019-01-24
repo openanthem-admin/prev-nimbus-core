@@ -13,8 +13,7 @@ import {
   Data,
   ParamMap
 } from '@angular/router';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
+import { of as observableOf,  Observable } from 'rxjs';
 import { JL } from 'jsnlog';
 import { StorageServiceModule, SESSION_STORAGE } from 'angular-webstorage-service';
 
@@ -23,13 +22,14 @@ import { PageService } from '../../../services/page.service';
 import { CustomHttpClient } from '../../../services/httpclient.service';
 import { LoaderService } from '../../../services/loader.service';
 import { ConfigService } from '../../../services/config.service';
-import { STOMPService } from '../../../services/stomp.service';
 import { Subject } from 'rxjs';
 import { LoggerService } from '../../../services/logger.service';
 import { SessionStoreService, CUSTOM_STORAGE } from '../../../services/session.store';
 import { AppInitService } from '../../../services/app.init.service';
+import { configureTestSuite } from 'ng-bullet';
+import { setup, TestContext } from '../../../setup.spec';
 
-let fixture, app, pageService, configService, router;
+let pageService, configService, router;
 
 export class MockActivatedRoute implements ActivatedRoute {
   snapshot: ActivatedRouteSnapshot;
@@ -47,20 +47,11 @@ export class MockActivatedRoute implements ActivatedRoute {
   firstChild: ActivatedRoute;
   children: ActivatedRoute[];
   pathFromRoot: ActivatedRoute[];
-  data = Observable.of({
+  data = observableOf({
     domain: 'test'
   });
   paramMap: Observable<ParamMap>;
   queryParamMap: Observable<ParamMap>;
-}
-
-class MockSTOMPService {
-  configure() {}
-  try_connect() {
-    return new Promise((resolve, reject) => {
-      resolve('abcd');
-    });
-  }
 }
 
 class MockPageService {
@@ -88,94 +79,59 @@ class MockRouter {
   navigate() {}
 }
 
+const declarations = [FlowWrapper];
+const imports = [RouterTestingModule, HttpModule, HttpClientTestingModule, StorageServiceModule];
+const providers = [
+  { provide: PageService, useClass: MockPageService },
+  { provide: ConfigService, useClass: MockConfigService },
+  { provide: Router, useClass: MockRouter },
+  { provide: ActivatedRoute, useClass: MockActivatedRoute },
+  { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
+  { provide: 'JSNLOG', useValue: JL },
+  CustomHttpClient,
+  LoaderService,
+  LoggerService,
+  AppInitService
+];
+let fixture, hostComponent;
 describe('FlowWrapper', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [FlowWrapper],
-      imports: [RouterTestingModule, HttpModule, HttpClientTestingModule, StorageServiceModule],
-      providers: [
-        { provide: STOMPService, useClass: MockSTOMPService },
-        { provide: PageService, useClass: MockPageService },
-        { provide: ConfigService, useClass: MockConfigService },
-        { provide: Router, useClass: MockRouter },
-        { provide: ActivatedRoute, useClass: MockActivatedRoute },
-        { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
-        { provide: 'JSNLOG', useValue: JL },
-        CustomHttpClient,
-        LoaderService,
-        LoggerService,
-        AppInitService
-      ]
-    }).compileComponents();
+
+  configureTestSuite(() => {
+    setup( declarations, imports, providers);
+  });
+
+
+  beforeEach(() => {
     fixture = TestBed.createComponent(FlowWrapper);
-    app = fixture.debugElement.componentInstance;
+    hostComponent = fixture.debugElement.componentInstance;
     pageService = TestBed.get(PageService);
     configService = TestBed.get(ConfigService);
     router = TestBed.get(Router);
+  });
+
+  it('should create the FlowWrapper',  async(() => {
+    expect(hostComponent).toBeTruthy();
   }));
 
-  it('should create the app', async(() => {
-    expect(app).toBeTruthy();
-  }));
+  // it('ngOnInit() call router.navigate() and pageService.loadDefaultPageForConfig()',  async(() => {
+  //   const test = { pageConfig: { config: { code: 123, uiStyles: { attributes: { route: 'testRoute' } } } } };
+  //   spyOn(router, 'navigate').and.callThrough();
+  //   spyOn(pageService, 'loadDefaultPageForConfig').and.callThrough();
+  //   hostComponent.ngOnInit();
+  //   pageService.logError(test);
+  //   expect(router.navigate).toHaveBeenCalled();
+  //   expect(pageService.loadDefaultPageForConfig).toHaveBeenCalled();
+  // }));
 
-  it('ngOnInit() call router.navigate() and pageService.loadDefaultPageForConfig()', async(() => {
-    const test = {
-      pageConfig: {
-        config: {
-          code: 123,
-          uiStyles: {
-            attributes: {
-              route: 'testRoute'
-            }
-          }
-        }
-      }
-    };
-    spyOn(router, 'navigate').and.callThrough();
-    spyOn(pageService, 'loadDefaultPageForConfig').and.callThrough();
-    app.ngOnInit();
-    pageService.logError(test);
-    expect(router.navigate).toHaveBeenCalled();
-    expect(pageService.loadDefaultPageForConfig).toHaveBeenCalled();
-  }));
+  // it('ngOnInit() call router.navigate() and pageService.loadFlowConfig()',  async(() => {
+  //   const test = { pageConfig: { config: { code: 123, uiStyles: { attributes: {} } } } };
+  //   spyOn(router, 'navigate').and.callThrough();
+  //   spyOn(pageService, 'loadFlowConfig').and.callThrough();
+  //   spyOn(configService, 'getFlowConfig').and.returnValue(undefined);
+  //   hostComponent.ngOnInit();
+  //   pageService.logError(test);
+  //   expect(router.navigate).toHaveBeenCalled();
+  //   expect(pageService.loadFlowConfig).toHaveBeenCalled();
+  // }));
 
-  it('ngOnInit() call router.navigate() and pageService.loadFlowConfig()', async(() => {
-    const test = {
-      pageConfig: {
-        config: {
-          code: 123,
-          uiStyles: {
-            attributes: {}
-          }
-        }
-      }
-    };
-    spyOn(router, 'navigate').and.callThrough();
-    spyOn(pageService, 'loadFlowConfig').and.callThrough();
-    spyOn(configService, 'getFlowConfig').and.returnValue(undefined);
-    app.ngOnInit();
-    pageService.logError(test);
-    expect(router.navigate).toHaveBeenCalled();
-    expect(pageService.loadFlowConfig).toHaveBeenCalled();
-  }));
-
-  it('on_next() should call pageService.traverseFlowConfig()', async(() => {
-    const test1 = JSON.stringify({
-      result: [
-        {
-          result: {
-            value: {
-              path: 'test/t'
-            }
-          }
-        }
-      ]
-    });
-    const test = {
-      body: test1
-    };
-    spyOn(pageService, 'traverseFlowConfig').and.callThrough();
-    app.on_next(test);
-    expect(pageService.traverseFlowConfig).toHaveBeenCalled();
-  }));
 });

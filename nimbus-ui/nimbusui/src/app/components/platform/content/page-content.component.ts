@@ -34,14 +34,15 @@ import { LoggerService } from '../../../services/logger.service';
  */
 @Component({
     selector: 'nm-page-content',
-    templateUrl: './page-content.component.html'
+    templateUrl: './page-content.component.html',
+    providers: [
+        WebContentSvc
+    ],
 })
 
 export class PageContent extends BaseElement{
     pageId: string;
     tilesList: any[];
-    errMsgArray: any[] =[];
-    errMsg: string;
     isPopState: boolean = false;
     labelSize: string;
     position: number = 0;
@@ -88,18 +89,8 @@ export class PageContent extends BaseElement{
         this.updateIntialPosition();        
     }
 
-    ngAfterViewInit() {
-        this.pageSvc.errorMessageUpdate$.subscribe((err: ExecuteException) => {
-            if (err.message) {
-                this._logger.debug('page content component recieved error message ' + err.message + 'from pageSvc.errorMessageUpdate$ subject');
-                this.errMsgArray.push({severity: 'error',  summary: 'Error Message',  detail: err.message});
-            }
-            this.cd.markForCheck();
-        });
-    }
-
     updateIntialPosition() {
-        if (this.label && this.element.config && this.element.config.labelConfigs) {
+        if (this.label && this.element.labels) {
             this.position = 1;
             this.labelSize = this.getHeaderSize(this.position);
         }

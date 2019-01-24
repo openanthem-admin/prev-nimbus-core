@@ -17,41 +17,52 @@ import { ConfigService } from '../../../../services/config.service';
 import { LoggerService } from '../../../../services/logger.service';
 import { SessionStoreService, CUSTOM_STORAGE } from '../../../../services/session.store';
 import { AppInitService } from '../../../../services/app.init.service';
+import { InputLabel } from './input-label.component';
+import { configureTestSuite, TestCtx } from 'ng-bullet';
+import { setup, TestContext } from '../../../../setup.spec';
+import { Param } from '../../../../shared/param-state';
+
+let fixture, hostComponent;
+
+const declarations = [
+  TextArea,
+  TooltipComponent,
+  InputLabel
+ ];
+const imports = [
+  FormsModule,
+  HttpClientModule,
+  HttpModule,
+  StorageServiceModule
+ ];
+const providers = [
+  { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
+  { provide: 'JSNLOG', useValue: JL },
+  { provide: LocationStrategy, useClass: HashLocationStrategy },
+  Location,
+  SessionStoreService,
+  PageService,
+  CustomHttpClient,
+  LoaderService,
+  ConfigService,
+  KeyFilterModule,
+  LoggerService,
+  AppInitService
+ ];
 
 describe('TextArea', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-        TextArea,
-        TooltipComponent
-       ],
-       imports: [
-        FormsModule,
-        HttpClientModule,
-        HttpModule,
-        StorageServiceModule
-       ],
-       providers: [
-        { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
-        { provide: 'JSNLOG', useValue: JL },
-        { provide: LocationStrategy, useClass: HashLocationStrategy },
-        Location,
-        SessionStoreService,
-        PageService,
-        CustomHttpClient,
-        LoaderService,
-        ConfigService,
-        KeyFilterModule,
-        LoggerService,
-        AppInitService
-       ]
-    }).compileComponents();
-  }));
 
-  it('should create the app', async(() => {
-    const fixture = TestBed.createComponent(TextArea);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
+  configureTestSuite(() => {
+    setup(declarations, imports, providers);
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TextArea);
+    hostComponent = fixture.debugElement.componentInstance;
+  });
+
+  it('should create the TextArea', async(() =>  {
+    expect(hostComponent).toBeTruthy();
   }));
 
 });

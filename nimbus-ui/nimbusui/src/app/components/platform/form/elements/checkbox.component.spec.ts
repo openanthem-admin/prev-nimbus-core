@@ -16,40 +16,52 @@ import { ConfigService } from '../../../../services/config.service';
 import { LoggerService } from '../../../../services/logger.service';
 import { SessionStoreService, CUSTOM_STORAGE } from '../../../../services/session.store';
 import { AppInitService } from '../../../../services/app.init.service';
+import { configureTestSuite } from 'ng-bullet';
+import { setup, TestContext } from '../../../../setup.spec';
+import { Param } from '../../../../shared/param-state';
+import { fieldValueParam } from 'mockdata';
 
+let param: Param;
+
+const declarations = [
+  CheckBox,
+  TooltipComponent
+ ];
+ const imports = [
+  FormsModule,
+  HttpClientModule,
+  HttpModule,
+  StorageServiceModule
+ ];
+ const providers = [
+  { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
+  { provide: 'JSNLOG', useValue: JL },
+  { provide: LocationStrategy, useClass: HashLocationStrategy },
+  Location,
+  PageService,
+  CustomHttpClient,
+  LoaderService,
+  ConfigService,
+  LoggerService,
+  SessionStoreService,
+  AppInitService
+ ];
+ let fixture, hostComponent;
 describe('CheckBox', () => {
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-        CheckBox,
-        TooltipComponent
-       ],
-       imports: [
-        FormsModule,
-        HttpClientModule,
-        HttpModule,
-        StorageServiceModule
-       ],
-       providers:[
-        { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
-        { provide: 'JSNLOG', useValue: JL },
-        { provide: LocationStrategy, useClass: HashLocationStrategy },
-        Location,
-        PageService,
-        CustomHttpClient,
-        LoaderService,
-        ConfigService,
-        LoggerService,
-        SessionStoreService,
-        AppInitService
-       ]
-    }).compileComponents();
-  }));
 
-  it('should create the app', async(() => {
-    const fixture = TestBed.createComponent(CheckBox);
-    const app = fixture.debugElement.componentInstance;
-    expect(app).toBeTruthy();
+  configureTestSuite(() => {
+    setup( declarations, imports, providers);
+  });
+
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(CheckBox);
+    hostComponent = fixture.debugElement.componentInstance;
+    hostComponent.element = fieldValueParam;
+  });
+
+  it('should create the CheckBox', async(() => {
+    expect(hostComponent).toBeTruthy();
   }));
 
 });

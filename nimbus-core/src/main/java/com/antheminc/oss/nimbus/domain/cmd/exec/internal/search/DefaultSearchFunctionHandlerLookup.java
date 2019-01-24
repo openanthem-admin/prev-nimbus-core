@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.Cacheable;
 
 import com.antheminc.oss.nimbus.FrameworkRuntimeException;
 import com.antheminc.oss.nimbus.domain.cmd.Command;
@@ -32,7 +33,6 @@ import com.antheminc.oss.nimbus.domain.model.config.ModelConfig;
 import com.antheminc.oss.nimbus.domain.model.config.ParamValue;
 import com.antheminc.oss.nimbus.domain.model.state.EntityState.Param;
 import com.antheminc.oss.nimbus.domain.model.state.repo.db.SearchCriteria.LookupSearchCriteria;
-import com.antheminc.oss.nimbus.domain.model.state.repo.db.SearchCriteria.ProjectCriteria;
 import com.antheminc.oss.nimbus.entity.StaticCodeValue;
 import com.antheminc.oss.nimbus.support.EnableLoggingInterceptor;
 
@@ -45,6 +45,9 @@ import com.antheminc.oss.nimbus.support.EnableLoggingInterceptor;
 public class DefaultSearchFunctionHandlerLookup<T, R> extends DefaultSearchFunctionHandler<T, R> {
 
 	@Override
+	@Cacheable(value="staticcodevalues", 
+		key = "#executionContext.getCommandMessage().getCommand().getFirstParameterValue(\"where\")", 
+		condition= "T(org.apache.commons.lang3.StringUtils).equalsIgnoreCase(#executionContext.getCommandMessage().getCommand().getElementSafely(T(com.antheminc.oss.nimbus.domain.cmd.CommandElement.Type).DomainAlias).getAlias(), \"staticCodeValue\")")
 	public R execute(ExecutionContext executionContext, Param<T> actionParameter) {
 		
 		ModelConfig<?> mConfig = getRootDomainConfig(executionContext);
@@ -71,8 +74,10 @@ public class DefaultSearchFunctionHandlerLookup<T, R> extends DefaultSearchFunct
 		String where = executionContext.getCommandMessage().getCommand().getFirstParameterValue(Constants.SEARCH_REQ_WHERE_MARKER.code);
 		lookupSearchCriteria.setWhere(where);
 		
-		ProjectCriteria projectCriteria = buildProjectCritera(cmd);
-		lookupSearchCriteria.setProjectCriteria(projectCriteria);
+		lookupSearchCriteria.setOrderby(cmd.getFirstParameterValue(Constants.SEARCH_REQ_ORDERBY_MARKER.code));
+		lookupSearchCriteria.setFetch(cmd.getFirstParameterValue(Constants.SEARCH_REQ_FETCH_MARKER.code));
+		lookupSearchCriteria.setAggregateCriteria(cmd.getFirstParameterValue(Constants.SEARCH_REQ_AGGREGATE_MARKER.code));
+		lookupSearchCriteria.setProjectCriteria(buildProjectCriteria(cmd));
 		
 		lookupSearchCriteria.setCmd(executionContext.getCommandMessage().getCommand());
 		return lookupSearchCriteria;

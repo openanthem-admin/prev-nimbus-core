@@ -34,7 +34,6 @@ export class ParamConfig implements Serializable<ParamConfig,string> {
     id: string;
     code: string;
     type: ConfigType;   
-    labelConfigs: LabelConfig[];
     validation: Validation;
     uiNatures: UiNature[];
     label: string;
@@ -52,14 +51,7 @@ export class ParamConfig implements Serializable<ParamConfig,string> {
         }
         if(inJson.type != null) {
             obj['type'] = new ConfigType(this.configSvc).deserialize( inJson.type );
-        }
-        let labelConfigs = [];  
-        if ( inJson.labelConfigs != null && inJson.labelConfigs.length > 0) { 
-            for ( var p in inJson.labelConfigs ) {
-                labelConfigs.push( new LabelConfig().deserialize(inJson.labelConfigs[p]) );
-            }
-            obj['labelConfigs'] = labelConfigs;
-        }   
+        } 
         if ( inJson.validations != null ) {
             obj['validation'] = new Validation().deserialize( inJson.validations );
         }
@@ -172,12 +164,12 @@ export class UiAttribute implements Serializable<UiAttribute,string> {
     postEventOnChange: boolean;
     draggable: boolean;
     rowSelection: boolean;
-    dataKey: string;
     showHeader: boolean;
     pagination: boolean;
     pageSize: number = 25; //server side has a default but defaulting here so that coverter can cast to number
     postButton: boolean;
     postButtonUrl: string;
+    postButtonUri: string;
     postButtonTargetPath: string;
     postButtonAlias : string;
     postButtonLabel: string;
@@ -208,8 +200,8 @@ export class UiAttribute implements Serializable<UiAttribute,string> {
     acceptLabel: string;
     rowExpander: boolean;
     readonlyInput: boolean;
-	monthNavigator: boolean;
-	yearNavigator: boolean;
+	  monthNavigator: boolean;
+	  yearNavigator: boolean;
     yearRange: string;
     metaData: any;
     captureType: string;
@@ -221,7 +213,18 @@ export class UiAttribute implements Serializable<UiAttribute,string> {
     border: boolean;
     showSourceControls: boolean;
     showTargetControls: boolean;
-    
+    scriptName: string;
+    orientation: string;
+    showMessages: boolean;
+    stylesheet: string;
+    delay: number;
+    useDelay: boolean;
+    closeAfterPrint: boolean;
+    printPath: string;
+    autoPrint: boolean;
+    dataEntryField: boolean;
+    fixLayout: boolean;
+    headerCheckboxToggleAllPages: boolean;
     deserialize( inJson ) {
         let obj = this;
         obj = Converter.convert(inJson,obj);

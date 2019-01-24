@@ -19,9 +19,11 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.antheminc.oss.nimbus.domain.defn.ViewConfig.Grid;
+import com.antheminc.oss.nimbus.domain.defn.ViewConfig.TreeGrid;
 import com.antheminc.oss.nimbus.domain.defn.extension.ValidateConditional.ValidationGroup;
 import com.antheminc.oss.nimbus.domain.model.state.EntityState.ListElemParam;
 import com.antheminc.oss.nimbus.domain.model.state.EntityState.Model;
@@ -50,6 +52,9 @@ public class DefaultJsonParamSerializer extends JsonSerializer<Param<?>> {
 	
 	private static final String K_TYPE = "type";
 	private static final String K_VALUES = "values";
+	private static final String K_LABELS = "labels";
+	private static final String K_STYLE = "style";
+	private static final String K_ELEM_LABELS = "elemLabels";
 	
 	private static final String K_PAGE = "page";
 	
@@ -91,6 +96,7 @@ public class DefaultJsonParamSerializer extends JsonSerializer<Param<?>> {
 			
 			if(p.isCollection()) {
 				gen.writeObjectField(K_PAGE, p.findIfCollection().getPage());
+				writer.writeObjectIfNotNull(K_ELEM_LABELS, p.findIfCollection()::getElemLabels);
 			}
 			
 			//writer.writeBooleanIfNotDefault(K_IS_COL, p::isCollection, false);
@@ -103,8 +109,16 @@ public class DefaultJsonParamSerializer extends JsonSerializer<Param<?>> {
 			if(ArrayUtils.isNotEmpty(activeValidationGroups))
 				gen.writeObjectField(K_ACTIVE_VALS, p.getActiveValidationGroups());
 			
-			writer.writeObjectIfNotNull(K_MESSAGE, p::getMessages);
+			if(CollectionUtils.isNotEmpty(p.getMessages())) {
+				writer.writeObjectIfNotNull(K_MESSAGE, p::getMessages);
+				// Resetting the message in param, so that once the message is read through the http response, it is removed from param state.
+				/* TODO Scenarios where further conditional processing is done based on the message text needs to be addressed,
+				 since the message state has been reset. There will be a sync issue until a state is reloaded and message is set.*/
+				p.setMessages(null);
+			}
 			writer.writeObjectIfNotNull(K_VALUES, p::getValues);
+			writer.writeObjectIfNotNull(K_LABELS, p::getLabels);
+			writer.writeObjectIfNotNull(K_STYLE, p::getStyle);
 			
 			if(!p.getType().getName().equals("string"))
 				writer.writeObjectIfNotNull(K_TYPE, p::getType);
@@ -166,7 +180,7 @@ public class DefaultJsonParamSerializer extends JsonSerializer<Param<?>> {
 			if(colParam.getConfig().getUiStyles()==null)
 				return false;
 			
-			return colParam.getConfig().getUiStyles().getAnnotation().annotationType()==Grid.class;
+			return ((colParam.getConfig().getUiStyles().getAnnotation().annotationType()==Grid.class) || (colParam.getConfig().getUiStyles().getAnnotation().annotationType() == TreeGrid.class));
 		}
 		
 		private void writeSyntheticState(Param<?> p) throws IOException {
