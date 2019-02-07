@@ -101,14 +101,6 @@
             <id>alfresco.com</id>
 	    <url>https://maven.alfresco.com/nexus/content/repositories/activiti/</url>
 	</repository>
-        <repository>
-            <id>ossrh-staging</id>
-            <url>https://oss.sonatype.org/content/repositories/staging</url>
-        </repository>
-        <repository>
-            <id>ossrh-snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
     </repositories>
 
     <developers>
