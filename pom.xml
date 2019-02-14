@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.antheminc.oss</groupId>
 	<artifactId>nimbus-parent</artifactId>
-	<version>1.4.2.BUILD-SNAPSHOT</version>
+	<version>1.4.3.BUILD-SNAPSHOT</version>
 	<name>nimbus-parent</name>
 	<packaging>pom</packaging>
 	<description>Anthem open source nimbus project </description>
