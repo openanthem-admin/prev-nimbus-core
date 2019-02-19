@@ -18,6 +18,7 @@
 import { LoaderService } from './services/loader.service';
 import { InPlaceEditorComponent } from './components/platform/form/elements/inplace-editor.component';
 import { TextArea } from './components/platform/form/elements/textarea.component';
+import { RichText } from './components/platform/form/elements/rich-text.component';
 import { MultiSelectListBox } from './components/platform/form/elements/multi-select-listbox.component';
 import { BreadcrumbComponent } from './components/platform/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from './components/platform/breadcrumb/breadcrumb.service';
@@ -40,10 +41,11 @@ import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 import { APP_BASE_HREF } from '@angular/common';
 import { MessagesModule } from 'primeng/messages';
 import { MessageModule } from 'primeng/message';
-import { DataTableModule, SharedModule, OverlayPanelModule, PickListModule, DragDropModule, CalendarModule, 
-    FileUpload, FileUploadModule, ListboxModule, DialogModule, CheckboxModule, DropdownModule, RadioButtonModule, 
+import { DataTableModule, SharedModule, OverlayPanelModule, PickListModule, DragDropModule, CalendarModule, TabViewModule,
+    FileUpload, FileUploadModule, ListboxModule, DialogModule, CheckboxModule, DropdownModule, InputMaskModule, RadioButtonModule, 
     ProgressBarModule, ProgressSpinnerModule, AccordionModule, GrowlModule, InputSwitchModule, TreeTableModule } from 'primeng/primeng';
 import { TableModule } from 'primeng/table';
+import { EditorModule } from 'primeng/editor';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { NavLinkRouter } from './directives/nav-link-router.directive';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -51,6 +53,7 @@ import { WindowRefService } from './services/window-ref.service';
 import { HeaderCheckBox } from './components/platform/form/elements/header-checkbox.component';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ToastModule } from 'primeng/toast';
+import { ChartModule } from 'primeng/chart';
 
 // Platform Imports
 // Components
@@ -71,6 +74,8 @@ import { ComboBox } from './components/platform/form/elements/combobox.component
 import { RadioButton } from './components/platform/form/elements/radio.component';
 import { Signature } from './components/platform/form/elements/signature.component';
 import { InputText } from './components/platform/form/elements/textbox.component';
+import { InputMaskComp } from './components/platform/form/elements/input-mask.component';
+import { Tab } from './components/platform/content/tab.component';
 import { CheckBoxGroup } from './components/platform/form/elements/checkbox-group.component';
 import { MultiselectCard } from './components/platform/form/elements/multi-select-card.component';
 import { ActionDropdown, ActionLink } from './components/platform/form/elements/action-dropdown.component';
@@ -107,6 +112,8 @@ import { Label } from './components/platform/content/label.component';
 import { InputLabel } from './components/platform/form/elements/input-label.component';
 import { BaseTableElement } from './components/platform/base-table-element.component';
 import { TableHeader } from './components/platform/grid/table-header.component';
+import { ToastMessageComponent } from './components/platform/message/toastmessage.component';
+
 // Services
 import { WebContentSvc } from './services/content-management.service';
 import { STOMPStatusComponent } from './services/stomp-status.component';
@@ -136,7 +143,6 @@ import { CustomErrorHandler } from './shared/custom.error.handler';
 import { StorageServiceModule, SESSION_STORAGE } from 'angular-webstorage-service';
 import { SessionStoreService, CUSTOM_STORAGE } from './services/session.store';
 import { SvgComponent } from './components/platform/svg/svg.component';
-import { SvgDefinitions } from './components/platform/svg/svg-definitions.component'
 
 // Declarations
 import { LoginCmp } from './components/login/login.component';
@@ -156,6 +162,8 @@ import { InputSwitch } from './components/platform/form/elements/input-switch.co
 import { InputLegend } from './components/platform/form/elements/input-legend.component';
 import { FormErrorMessage } from './components/platform/form-error-message.component';
 import { EventPropagationDirective } from './components/platform/form/elements/event-propagation.directive';
+import { NmChart } from './components/platform/charts/chart.component';
+import { NmMessageService } from './services/toastmessage.service';
 /**
  * \@author Dinakar.Meda
  * \@author Sandeep.Mantha
@@ -180,6 +188,8 @@ export function init_app(appinitservice: AppInitService) {
         HttpModule,
         FormsModule,
         DropdownModule,
+        InputMaskModule,
+        TabViewModule,
         DataTableModule,
         TableModule,
         TreeTableModule,
@@ -205,14 +215,16 @@ export function init_app(appinitservice: AppInitService) {
         StorageServiceModule,
         AngularSvgIconModule,
         ToastModule,
-        InputSwitchModule
+        InputSwitchModule,
+        ChartModule,
+        EditorModule
     ],
     declarations: [ AppComponent, STOMPStatusComponent, FlowWrapper, PageContent, PageNotfoundComponent, StaticText,
-        Tile, Section, Header, Form, FormElement, InputText, ComboBox, RadioButton, Signature, CheckBoxGroup,
+        Tile, Section, Header, Form, FormElement, InputText, InputMaskComp, Tab, ComboBox, RadioButton, Signature, CheckBoxGroup,
         InPlaceEditorComponent, Paragraph, Value, BaseElement, FormGridFiller, 
         MultiselectCard, Link, Menu, CardDetailsComponent, CardDetailsFieldGroupComponent, CardDetailsFieldComponent, CardDetailsGrid, FieldValue,
         Accordion, AccordionTab, FrmGroupCmp, Button, ButtonGroup, FilterButton, OrderablePickList,
-        STOMPStatusComponent, DataTable, SubHeaderCmp, TextArea, LandingPage,
+        STOMPStatusComponent, DataTable, SubHeaderCmp, TextArea, LandingPage, RichText,
         LayoutService, ContentContainer,
         DomainFlowCmp, HeaderGlobal, FooterGlobal,
         BreadcrumbComponent, NavLinkRouter,
@@ -221,7 +233,7 @@ export function init_app(appinitservice: AppInitService) {
         HomeLayoutCmp, LoginCmp, LoginLayoutCmp, StyleGuideCmp, 
         KeysPipe, LinkPipe, DateTimeFormatPipe, SelectItemPipe, MultiSelectListBox, 
         CheckBox, FileUploadComponent, BreadcrumbComponent, TooltipComponent, Calendar, LoaderComponent, MessageComponent,
-        HeaderCheckBox, SvgComponent, SvgDefinitions, ActionTray, SubDomainFlowCmp, Image, NmPanelMenu,NmPanelMenuSub, MenuRouterLinkActive, 
+        HeaderCheckBox, SvgComponent, ActionTray, SubDomainFlowCmp, Image, NmPanelMenu,NmPanelMenuSub, MenuRouterLinkActive, NmChart, ToastMessageComponent,
         MenuRouteLink, Label, InputLabel,InputSwitch,TreeGrid,InputLegend, FormErrorMessage, BaseTableElement, EventPropagationDirective, TableHeader
     ],
     entryComponents: [ FlowWrapper, PageContent, PageNotfoundComponent, LoginCmp, HomeLayoutCmp, SubDomainFlowCmp],
@@ -235,7 +247,7 @@ export function init_app(appinitservice: AppInitService) {
          { provide: ErrorHandler, useClass: CustomErrorHandler },
          { provide: CUSTOM_STORAGE, useExisting: SESSION_STORAGE },
          SessionStoreService,
-         AuthenticationService, BreadcrumbService, LoaderService, FileService, LayoutService, WindowRefService, LoggerService, 
+         AuthenticationService, BreadcrumbService, LoaderService, FileService, LayoutService, WindowRefService, LoggerService, NmMessageService,
          RouteService, MessageService, GridUtils, DateTimeFormatPipe, PrintService],
     bootstrap: [ AppComponent ]
 })

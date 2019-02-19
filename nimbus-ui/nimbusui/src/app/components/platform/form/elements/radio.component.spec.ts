@@ -1,3 +1,21 @@
+/**
+ * @license
+ * Copyright 2016-2018 the original author or authors.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { NmMessageService } from './../../../../services/toastmessage.service';
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
 import { RadioButtonModule } from 'primeng/primeng';
@@ -21,7 +39,8 @@ import { InputLegend } from '../../../platform/form/elements/input-legend.compon
 import { configureTestSuite } from 'ng-bullet';
 import { setup, TestContext } from '../../../../setup.spec';
 import { Param } from '../../../../shared/param-state';
-import { fieldValueParam } from 'mockdata';
+import { radioElement } from 'mockdata';
+import { By } from '@angular/platform-browser';
 
 let param: Param;
 
@@ -48,6 +67,7 @@ const providers = [
    LoaderService,
    ConfigService,
    LoggerService,
+   NmMessageService,
    AppInitService
 ];
 
@@ -61,11 +81,25 @@ describe('RadioButton', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(RadioButton);
     hostComponent = fixture.debugElement.componentInstance;
-    hostComponent.element = fieldValueParam;
+    hostComponent.element = radioElement as Param;
   });
 
-  it('should create the RadioButton', async(() => {
-    expect(hostComponent).toBeTruthy();
-  }));
+    it('should create the RadioButton', async(() => {
+        expect(hostComponent).toBeTruthy();
+    }));
+
+    it('nm-input-legend should be created', async(() => {
+        fixture.detectChanges();
+        const debugElement = fixture.debugElement;
+        const inputLegendEle = debugElement.query(By.css('nm-input-legend'));
+        expect(inputLegendEle).toBeTruthy();
+    }));
+
+    it('p-radioButton should be created', async(() => {
+        fixture.detectChanges();
+        const debugElement = fixture.debugElement;
+        const pRadioEle = debugElement.query(By.css('p-radioButton'));
+        expect(pRadioEle).toBeTruthy();
+    }));
 
 });

@@ -50,6 +50,7 @@ export abstract class BaseLabel {
      * Get the tooltip help text for this element.
      */
     public get helpText(): string {
+        this.loadLabelConfig(this.element);
         return ParamUtils.getHelpText(this.labelConfig);
     }
 

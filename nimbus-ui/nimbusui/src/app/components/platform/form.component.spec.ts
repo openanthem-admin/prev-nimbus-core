@@ -1,10 +1,27 @@
-import { TableHeader } from './grid/table-header.component';
+/**
+ * @license
+ * Copyright 2016-2018 the original author or authors.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, FormGroup, ValidatorFn, Validators, FormControl } from '@angular/forms';
 import { DropdownModule, GrowlModule, MessagesModule, DialogModule, AccordionModule, 
     DataTableModule, FileUploadModule, PickListModule, ListboxModule, CheckboxModule, 
-    RadioButtonModule, CalendarModule, InputSwitchModule, TreeTableModule } from 'primeng/primeng';
+    RadioButtonModule, CalendarModule, InputSwitchModule, TreeTableModule, InputMaskModule, TabViewModule, EditorModule, ChartModule } from 'primeng/primeng';
+
 import { TableModule } from 'primeng/table';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { HttpModule } from '@angular/http';
@@ -84,6 +101,12 @@ import { ServiceConstants } from '../../services/service.constants';
 import { PrintService } from '../../services/print.service';
 import { GridService } from '../../services/grid.service';
 import { formElement, formModel, textboxnotnullmodel, textboxnotnullelement } from 'mockdata';
+import { InputMaskComp } from './form/elements/input-mask.component';
+import { RichText } from './form/elements/rich-text.component';
+import { Tab } from './content/tab.component';
+import { NmMessageService } from './../../services/toastmessage.service';
+import { NmChart } from './charts/chart.component';
+import { TableHeader } from './grid/table-header.component';
 
 class MockLoggerService {
   debug() { }
@@ -186,7 +209,11 @@ const declarations = [
   CardDetailsFieldGroupComponent,
   InputLegend,
   FormErrorMessage,
-  PrintDirective
+  PrintDirective,
+  InputMaskComp,
+  Tab,
+  NmChart,
+  RichText
 ];
 const imports = [
    FormsModule, 
@@ -213,7 +240,11 @@ const imports = [
    ToastModule,
    InputSwitchModule, 
    TreeTableModule,
-   BrowserAnimationsModule
+   BrowserAnimationsModule,
+   InputMaskModule,
+   TabViewModule,
+   ChartModule,
+   EditorModule
 ];
 const providers = [
   FormElementsService,
@@ -229,6 +260,7 @@ Location,
  AppInitService,
  PrintService,
  GridService,
+ NmMessageService,
  SessionStoreService
 ];
 
