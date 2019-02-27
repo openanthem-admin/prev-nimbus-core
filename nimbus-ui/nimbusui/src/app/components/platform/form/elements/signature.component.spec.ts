@@ -1,3 +1,21 @@
+/**
+ * @license
+ * Copyright 2016-2018 the original author or authors.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { NmMessageService } from './../../../../services/toastmessage.service';
 import { Param } from './../../../../shared/param-state';
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
@@ -22,7 +40,9 @@ import { InputLabel } from './input-label.component';
 import { ControlSubscribers } from '../../../../services/control-subscribers.service';
 import { configureTestSuite } from 'ng-bullet';
 import { setup, TestContext } from '../../../../setup.spec';
-import { fieldValueParam } from 'mockdata';
+import { signatureElement } from 'mockdata';
+import { By } from '@angular/platform-browser';
+import { ServiceConstants } from '../../../../services/service.constants';
 
 let logger, param;
 
@@ -32,6 +52,8 @@ class MockControlSubscribers {
 
 class MockLoggerService {
   debug(a) {  }
+  info(a) {}
+  error(a) {}
 }
 
 const declarations = [
@@ -51,6 +73,7 @@ const declarations = [
   { provide: LocationStrategy, useClass: HashLocationStrategy },
   { provide: ControlSubscribers, useClass: MockControlSubscribers},
   { provide: LoggerService, useClass: MockLoggerService},
+  NmMessageService,
   Location,
   SessionStoreService,
   PageService,
@@ -71,7 +94,7 @@ describe('Signature', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(Signature);
     hostComponent = fixture.debugElement.componentInstance;
-    hostComponent.element = fieldValueParam;
+    hostComponent.element = signatureElement as Param;
     logger = TestBed.get(LoggerService);
   });
 
@@ -79,15 +102,96 @@ describe('Signature', () => {
     expect(hostComponent).toBeTruthy();
   }));
 
-  // it('ngOnInit() should update the height and width properties', () => {
-  //   fixture.whenStable().then(() => {
-  //     hostComponent.element.config.uiStyles.attributes.width = '100';
-  //     hostComponent.element.config.uiStyles.attributes.height = '200';
-  //     hostComponent.ngOnInit();
-  //     expect(hostComponent.width).toEqual(100);
-  //     expect(hostComponent.height).toEqual(200);
-  //   });
-  // });
+  it('nm-input-label should be created on configuring the label', async(() => {
+    ServiceConstants.LOCALE_LANGUAGE = 'en-US';
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const labelEle = debugElement.query(By.css('nm-input-label'));
+    expect(labelEle.name).toEqual('nm-input-label');
+  }));
+
+  it('nm-input-label should not be created if elment.labels is not provided', async(() => {
+    ServiceConstants.LOCALE_LANGUAGE = 'en-US';
+    hostComponent.element.labels = [];
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const labelEle = debugElement.query(By.css('nm-input-label'));
+    expect(labelEle).toBeFalsy;
+  }));
+
+  it('canvas should be created', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const canvasEle = debugElement.query(By.css('canvas'));
+    expect(canvasEle).toBeTruthy();
+  }));
+
+  it('on click of the clear button the clear() should be called', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const clearButtonEle = debugElement.query(By.css('.btn.btn-secondary.post-btn'));
+    spyOn(hostComponent, 'clear').and.callThrough();
+    expect(clearButtonEle).toBeTruthy();
+    clearButtonEle.nativeElement.click();
+    expect(hostComponent.clear).toHaveBeenCalled();
+  }));
+
+  it('on click of the save button the save() should be called', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const allButtonEle = debugElement.queryAll(By.css('button'));
+    spyOn(hostComponent, 'save').and.callThrough();
+    expect(allButtonEle.length > 0).toBeTruthy();
+    allButtonEle[0].nativeElement.click();
+    expect(hostComponent.save).toHaveBeenCalled();
+  }));
+
+  it('on click of the zoom in button the zoomCanvas() should be called', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const allButtonEle = debugElement.queryAll(By.css('button'));
+    spyOn(hostComponent, 'zoomCanvas').and.callThrough();
+    expect(allButtonEle.length > 0).toBeTruthy();
+    allButtonEle[2].nativeElement.click();
+    expect(hostComponent.zoomCanvas).toHaveBeenCalled();
+  }));
+
+  it('on click of the zoom out button the shrinkCanvas() should be called', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const allButtonEle = debugElement.queryAll(By.css('button'));
+    expect(allButtonEle.length > 0).toBeTruthy();
+    allButtonEle[2].nativeElement.click();
+    fixture.detectChanges();
+    spyOn(hostComponent, 'shrinkCanvas').and.callThrough();
+    fixture.whenStable().then(() => {
+      const allButtonEle1 = debugElement.queryAll(By.css('button'));
+      allButtonEle1[2].nativeElement.click();
+      expect(hostComponent.shrinkCanvas).toHaveBeenCalled();
+      expect(hostComponent.zoomFactor).toEqual(1);
+    });
+  }));
+
+  it('on click of the getUpdatesignature in button the getUpdatedSignature() should be called', async(() => {
+    hostComponent.getUpdatedSignature = () => { };
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const allButtonEle = debugElement.queryAll(By.css('button'));
+    spyOn(hostComponent, 'getUpdatedSignature').and.callThrough();
+    expect(allButtonEle.length > 0).toBeTruthy();
+    allButtonEle[3].nativeElement.click();
+    expect(hostComponent.getUpdatedSignature).toHaveBeenCalled();
+  }));
+
+  it('ngOnInit() should update the height and width properties', () => {
+    fixture.whenStable().then(() => {
+      hostComponent.element.config.uiStyles.attributes.width = '100';
+      hostComponent.element.config.uiStyles.attributes.height = '200';
+      hostComponent.ngOnInit();
+      expect(hostComponent.width).toEqual(100);
+      expect(hostComponent.height).toEqual(200);
+    });
+  });
 
   it('zoomCanvas() should update zoomFactor as 2 and zoomClass as zoom', async(() => {
     hostComponent.zoomCanvas();
@@ -101,12 +205,12 @@ describe('Signature', () => {
     expect(hostComponent.zoomClass).toEqual('');
   }));
 
-  // it('ngAfterViewInit() should call initCanvasElement()', async(() => {
-  //   (hostComponent as any).initCanvasElement = () => { };
-  //   const spy = spyOn((hostComponent as any), 'initCanvasElement').and.callThrough();
-  //   hostComponent.ngAfterViewInit();
-  //   expect(spy).toHaveBeenCalled();
-  // }));
+  it('ngAfterViewInit() should call initCanvasElement()', async(() => {
+    (hostComponent as any).initCanvasElement = () => { };
+    const spy = spyOn((hostComponent as any), 'initCanvasElement').and.callThrough();
+    hostComponent.ngAfterViewInit();
+    expect(spy).toHaveBeenCalled();
+  }));
 
   it('initCanvasElement() should call applyContextRules(), renderExistingSignature(), registerCaptureEvents()', async(() => {
     (hostComponent as any).applyContextRules = () => { };

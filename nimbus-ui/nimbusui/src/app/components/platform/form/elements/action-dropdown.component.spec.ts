@@ -1,3 +1,21 @@
+/**
+ * @license
+ * Copyright 2016-2018 the original author or authors.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { NmMessageService } from './../../../../services/toastmessage.service';
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
 import { HttpModule } from '@angular/http';
@@ -27,10 +45,11 @@ import { Link } from '../../link.component';
 import { SvgComponent } from '../../svg/svg.component';
 import { configureTestSuite } from 'ng-bullet';
 import { setup, TestContext } from '../../../../setup.spec';
-import { fieldValueParam, MockActionDropdownLink } from 'mockdata';
+import { actionDropDownRowData, actionDropDownElement, actionDropDownParams, ActionDropDownLinkElement, actionDropDownLinkParams, MockActionDropdownLink } from 'mockdata';
 import { ServiceConstants } from './../../../../services/service.constants';
 import { By } from '@angular/platform-browser';
 import { ComponentTypes } from './../../../../shared/param-annotations.enum';
+import { Subject } from 'rxjs';
 
 let pageservice, configservice;
 
@@ -63,6 +82,7 @@ const declarations = [
   LoaderService,
   ConfigService,
   SessionStoreService,
+  NmMessageService,
   AppInitService
  ];
  let fixture, hostComponent;
@@ -153,6 +173,10 @@ class MockElementRef {
 }
 
 class MockPageService {
+    eventUpdate$: Subject<any>;
+    constructor() {
+        this.eventUpdate$ = new Subject();
+    }
     processEvent(a, b, c) {}
 }
 
@@ -191,7 +215,8 @@ describe('ActionDropdown', () => {
   beforeEach(() => {
       fixture = TestBed.createComponent(ActionDropdown);
       hostComponent = fixture.debugElement.componentInstance;
-      hostComponent.element = fieldValueParam;
+      hostComponent.element = actionDropDownElement as Param;
+      hostComponent.params = actionDropDownParams as ParamConfig[];
       pageservice = TestBed.get(PageService);
     });
   
@@ -245,8 +270,94 @@ describe('ActionDropdown', () => {
     expect(hostComponent.enabled).toEqual(true);
   }));
 
-  it('enabled property should not be created', async(() => {
+  it('Button should be created if the element.visible is configured as true',async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEle = debugElement.query(By.css('button'));
+    expect(buttonEle).toBeTruthy();    
+    expect(buttonEle.nativeElement.classList[0].toString()).toEqual(hostComponent.element.config.uiStyles.attributes.cssClass);
+  }));
+
+
+  it('OnClick of the button the toggleOpen() should be called',async(() => {
+    hostComponent.params = actionDropDownLinkParams as ParamConfig[];
+    hostComponent.element = actionDropDownElement as Param;
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    spyOn(hostComponent, 'toggleOpen').and.callThrough();
+    const buttonEle = debugElement.query(By.css('button'));    
+    buttonEle.nativeElement.click();
+    expect(hostComponent.toggleOpen).toHaveBeenCalled();    
+  }));
+
+  it('OnClick of the button the dropdownContent should be visible',async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEle = debugElement.query(By.css('button'));
+    buttonEle.nativeElement.click();
+    const divContentEle = debugElement.query(By.css('.dropdownContent'));
+    expect(divContentEle).toBeTruthy();
+  }));
+
+  it('Nm-image should be created if the imgSrc is configured',async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const nmImageEle = debugElement.query(By.css('nm-image'));
+    expect(nmImageEle).toBeTruthy();
+  }));
+
+  it('Nm-image should not be created if the imgSrc is not configured',async(() => {
+      hostComponent.element.config.uiStyles.attributes.imgSrc = '';
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const nmImageEle = debugElement.query(By.css('nm-image'));
+    expect(nmImageEle).toBeFalsy();
+  }));
+
+  it('If rowData is available then nm-action-link should be created',async(() => {
+      hostComponent.rowData = actionDropDownRowData;
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;    
+    const actionLinkEle = debugElement.query(By.css('nm-action-link'));
+    expect(actionLinkEle).toBeTruthy();
+  }));
+
+  it('If rowData is not available then nm-action-link should not be created',async(() => {
+    hostComponent.element = ActionDropDownLinkElement as Param;
+    hostComponent.params = actionDropDownLinkParams as ParamConfig[];
+  fixture.detectChanges();
+  const debugElement = fixture.debugElement;    
+  const actionLinkEle = debugElement.query(By.css('nm-action-link'));
+  expect(actionLinkEle).toBeFalsy();
+  }));
+
+  it('If rowData is available then nm-link should not be created',async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;    
+    const linkEle = debugElement.query(By.css('nm-link'));
+    expect(linkEle).toBeFalsy();
+  }));
+
+  it('If rowData is not available then nm-link should be created',async(() => {
+    hostComponent.element = ActionDropDownLinkElement as Param;
+    hostComponent.params = actionDropDownLinkParams as ParamConfig[];
+  fixture.detectChanges();
+  const debugElement = fixture.debugElement;    
+  const linkEle = debugElement.query(By.css('nm-link'));
+  expect(linkEle).toBeTruthy();
+}));
+
+  it('Button should not be created if the element.visible is configured as false',async(() => {
+    hostComponent.element.visible = false;
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEle = debugElement.query(By.css('button'));
+    expect(buttonEle).toBeFalsy();
+  }));
+
+    it('enabled property should not be created', async(() => {
     hostComponent.element.enabled = false;
     expect(hostComponent.enabled).toBeFalsy();
   }));
 });
+

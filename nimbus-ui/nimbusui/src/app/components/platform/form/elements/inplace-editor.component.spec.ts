@@ -1,3 +1,21 @@
+/**
+ * @license
+ * Copyright 2016-2018 the original author or authors.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 import { Param } from './../../../../shared/param-state';
 'use strict';
 import { TestBed, async } from '@angular/core/testing';
@@ -26,7 +44,9 @@ import { InputLabel } from './input-label.component';
 import { configureTestSuite } from 'ng-bullet';
 import { setup, TestContext } from '../../../../setup.spec';
 import { Values } from '../../../../shared/param-state';
-import { fieldValueParam } from 'mockdata';
+import { inplaceEditorElement } from 'mockdata';
+import { By } from '@angular/platform-browser';
+import { ServiceConstants } from '../../../../services/service.constants';
 
 let pageService;
 
@@ -86,12 +106,106 @@ describe('InPlaceEditorComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(InPlaceEditorComponent);
     hostComponent = fixture.debugElement.componentInstance;
-    hostComponent.element = fieldValueParam;
+    hostComponent.element = inplaceEditorElement as Param;
     pageService = TestBed.get(PageService);
   });
 
   it('should create the InPlaceEditorComponent', async(() => {
     expect(hostComponent).toBeTruthy();
+  }));
+
+  it('Label should be created if label is configured',async(() => {
+    ServiceConstants.LOCALE_LANGUAGE = 'en-US';
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const labelEle = debugElement.query(By.css('nm-input-label'));
+    expect(labelEle.name).toEqual('nm-input-label');
+  }));
+
+  it('nm-input-label should not be created if the label is not configured', async(() => {
+    ServiceConstants.LOCALE_LANGUAGE = 'en-US';
+    hostComponent.element.labels = [];
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const labelEle = debugElement.query(By.css('nm-input-label'));
+    expect(labelEle).toBeFalsy();
+  }));
+
+  it('anchor element should be created if displayValue is not UNASSIGNVALUE', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const anchorEle = debugElement.query(By.css('.form-control-static.editTrigger'));
+    expect(anchorEle).toBeTruthy();
+    const spanEles = debugElement.queryAll(By.css('span'));
+    expect(spanEles[0].nativeElement.innerText).toEqual(hostComponent.element.leafState);
+    expect(hostComponent.displayValue).toEqual(hostComponent.element.leafState);
+  }));
+
+  it('anchor element should be created if displayValue is UNASSIGNVALUE', async(() => {
+    hostComponent.element.leafState = '';
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const anchorEle = debugElement.query(By.css('.form-control-static.editTrigger'));
+    expect(anchorEle).toBeTruthy();
+    const spanEles = debugElement.queryAll(By.css('span'));
+    expect(spanEles[0].nativeElement.innerText).toEqual('Unassigned');
+    expect(hostComponent.displayValue).toEqual('Unassigned');    
+  }));
+
+  it('anchor element should not be created if the element.enabled is false', async(() => {
+    hostComponent.element.enabled = false;
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const anchorEle = debugElement.query(By.css('.form-control-static.editTrigger'));
+    expect(anchorEle).toBeFalsy();
+  }));
+
+  it('if the element.enabled is false then div element should be created if displayValue is UNASSIGNVALUE', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const divEles = debugElement.queryAll(By.css('div'));    
+    expect(divEles[1].childNodes[1].nativeElement.innerText).toEqual('Unassigned');    
+  }));
+
+  it('if the element.enabled is false then div element should be created if displayValue is not UNASSIGNVALUE', async(() => {
+    hostComponent.element.leafState = 'testleafstate'
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const divEles = debugElement.queryAll(By.css('div'));
+    expect(divEles[1].childNodes[2].nativeElement.innerText).toEqual(hostComponent.element.leafState);
+    expect(hostComponent.displayValue).toEqual(hostComponent.element.leafState);
+  }));
+
+  it('submit button should be created', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEles = debugElement.queryAll(By.css('button'));
+    expect(buttonEles[0].attributes.title).toEqual('press enter to submit');    
+  }));
+
+  it('on click of submit button should call onSubmit()', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEles = debugElement.queryAll(By.css('button'));
+    spyOn(hostComponent, 'onSubmit').and.callThrough();
+    buttonEles[0].nativeElement.click();
+    expect(hostComponent.onSubmit).toHaveBeenCalled();
+  }));
+
+  it('cancel button should be created', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    const buttonEles = debugElement.queryAll(By.css('button'));
+    expect(buttonEles[1].attributes.title).toEqual('press escape to cancel');    
+  }));
+
+  it('on click of cancel button should call cancel()', async(() => {
+    fixture.detectChanges();
+    const debugElement = fixture.debugElement;
+    spyOn(hostComponent, 'cancel').and.callThrough();
+    const buttonEles = debugElement.queryAll(By.css('button'));
+    buttonEles[1].nativeElement.click();
+    expect(hostComponent.cancel).toHaveBeenCalled();
   }));
 
   it('set value() should update the displayValue', async(() => {
@@ -122,20 +236,20 @@ describe('InPlaceEditorComponent', () => {
       expect(hostComponent.displayValue).toEqual('ls');
     }));
 
-    // it('ngOnInit() should call the setDisplayValue() 3 times', () => {
-    //   fixture.whenStable().then(() => {
-    //     hostComponent.setDisplayValue = () => {};
-    //     (hostComponent as any).generateComponent = () => {};
-    //     hostComponent.element.leafState = 'l';
-    //     hostComponent.element.config.uiStyles.attributes.inplaceEditType = '';
-    //     hostComponent.element.config.code = '123';
-    //     const eve = { leafState: '', config: { code: '123' } };
-    //     spyOn(hostComponent, 'setDisplayValue').and.callThrough();
-    //     hostComponent.ngOnInit();
-    //     pageService.logError(eve);
-    //     expect(hostComponent.setDisplayValue).toHaveBeenCalledTimes(3);
-    //   });
-    // });
+    it('ngOnInit() should call the setDisplayValue() 3 times', () => {
+      fixture.whenStable().then(() => {
+        hostComponent.setDisplayValue = () => {};
+        (hostComponent as any).generateComponent = () => {};
+        hostComponent.element.leafState = 'l';
+        hostComponent.element.config.uiStyles.attributes.inplaceEditType = '';
+        hostComponent.element.config.code = '123';
+        const eve = { leafState: '', config: { code: '123' } };
+        spyOn(hostComponent, 'setDisplayValue').and.callThrough();
+        hostComponent.ngOnInit();
+        pageService.logError(eve);
+        expect(hostComponent.setDisplayValue).toHaveBeenCalledTimes(3);
+      });
+    });
     
     it('generateComponent() should update the inputInstance.element and setInPlaceEditContext', async(() => {
       const inputInstance = { element: '', setInPlaceEditContext: a => {} };
@@ -203,3 +317,4 @@ describe('InPlaceEditorComponent', () => {
       expect(hostComponent.setDisplayValue).toHaveBeenCalled();
     }));
 });
+
