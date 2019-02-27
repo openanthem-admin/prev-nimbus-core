@@ -6,7 +6,7 @@
 	<name>nimbus-parent</name>
 	<packaging>pom</packaging>
 	<description>Anthem open source nimbus project </description>
-  	<url>http://www.oss.antheminc.com/</url>
+  	<url>https://www.oss.antheminc.com/</url>
 
 	<properties>
 		<java.version>1.8</java.version>
